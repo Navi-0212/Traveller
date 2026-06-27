@@ -79,43 +79,6 @@ Traveller combines modern engineering paradigms with premium design systems:
 * **Pydantic v2**: Hard schema validation for data models.
 * **Google GenAI SDK**: Direct integration with Gemini 2.5 Flash Lite.
 * **Pytest**: Complete unit testing suite with offline mocks.
-
 ---
 
-## ⚙️ Quick Start (Run Locally)
-
-### 1. Prerequisites
-Ensure you have **Python 3.10+** installed.
-
-### 2. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Configure API Key
-Create a `.env` file in the project root:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-*(Supports new Gemini AI Studio secure keys starting with `AQ.`)*
-
-### 4. Start the Application
-```bash
-python run.py
-```
-Visit **`http://localhost:8000`** in your browser.
-
----
-
-## 🧪 Testing
-
-Test the API and pipeline using the automated test suite:
-
-```bash
-# Run mock-based offline tests (instant, requires no API key)
-python -m pytest -k "mocked"
-
-# Run full integration tests (requires valid GEMINI_API_KEY)
-python -m pytest
-```
 
