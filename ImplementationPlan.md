@@ -129,6 +129,13 @@ This document serves as the persistent master roadmap for building **Traveller**
 - Added scale active transitions to all primary buttons and chips.
 - Authored the project documentation `walkthrough.md` outlining system architecture, design specifications, offline mocks, and local execution details.
 
+### Deployment & Launch (Completed)
+- Separated frontend and backend architectures: hosted static client on Vercel and API backend on Railway.
+- Created `Procfile` and updated `run.py` to support dynamic host/port bindings.
+- Resolved backend startup crashes by removing unused static files directory mounts.
+- Implemented Vercel reverse proxy rewrites in `vercel.json` and relative paths in `index.html` to eliminate CORS handshake errors.
+- Verified active connection, API key authentication, and E2E multi-agent planning pipelines on the live Vercel domain.
+
 ### Sprint 9: Budget & Co-Pilot Drawer (Screens 4 & 5) (Completed)
 - Integrated Screen 4 (Financial Workspace/Budget Dashboard) including the circular SVG Spent vs Remaining gauge, cost forecast daily sparkline bars, and category breakdown allocation grid.
 - Implemented the "What-If" target budget slider which fires a cost-reduction instruction via the co-pilot refinement API.
