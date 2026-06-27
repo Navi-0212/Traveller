@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://traveller-backend-production.up.railway.app/api/:path*"
+      "destination": "https://traveller-production-1a3d.up.railway.app/api/:path*"
     },
     {
       "source": "/",
