@@ -784,13 +784,8 @@
             const cursorPriya = document.getElementById("mock-cursor-priya");
             const cursorSam = document.getElementById("mock-cursor-sam");
             if (cursorPriya && cursorSam) {
-                if (show) {
-                    cursorPriya.classList.remove("hidden");
-                    cursorSam.classList.remove("hidden");
-                } else {
-                    cursorPriya.classList.add("hidden");
-                    cursorSam.classList.add("hidden");
-                }
+                cursorPriya.classList.add("hidden");
+                cursorSam.classList.add("hidden");
             }
         }
 
@@ -2200,8 +2195,8 @@
             });
         }
 
-        // Start multiplayer presence
-        startMultiplayerPresence();
+        // Start multiplayer presence (disabled for single-player preference)
+        // startMultiplayerPresence();
     </script>
 </body>
 </html>
