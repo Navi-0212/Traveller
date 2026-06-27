@@ -4,7 +4,6 @@ load_dotenv()
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -21,7 +20,7 @@ allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") i
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -71,9 +70,9 @@ async def refine_travel_plan(request: RefineRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Refinement pipeline error: {str(e)}")
 
-# Mount static folder for frontend resources and serve index.html at root
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+# Serve index.html at root if present (for local development), otherwise redirect to health check
 @app.get("/")
 async def serve_index():
-    return FileResponse("index.html")
+    if os.path.exists("index.html"):
+        return FileResponse("index.html")
+    return {"status": "healthy", "message": "Traveller API is running. Access the frontend via Vercel."}
