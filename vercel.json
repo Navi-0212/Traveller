@@ -1,0 +1,17 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://traveller-backend-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/",
+      "destination": "/static/index.html"
+    },
+    {
+      "source": "/static/:path*",
+      "destination": "/static/:path*"
+    }
+  ]
+}

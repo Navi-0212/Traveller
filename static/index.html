@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Traveller | AI Travel Planner</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #dfe2f1;
+            font-family: 'Outfit', sans-serif;
+        }
+        .font-headline {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .aurora-glow {
+            box-shadow: 0 0 30px rgba(13, 148, 136, 0.2);
+        }
+        .focus-glow:focus-within {
+            box-shadow: 0 0 25px rgba(13, 148, 136, 0.35);
+            border-color: rgba(13, 148, 136, 0.4);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(13, 148, 136, 0.2);
+            border-radius: 10px;
+        }
+        .pulse-gold {
+            animation: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-gold {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px rgba(217, 119, 6, 0.6)); }
+            50% { opacity: .7; filter: drop-shadow(0 0 2px rgba(217, 119, 6, 0.2)); }
+        }
+        .node-line {
+            background: linear-gradient(to bottom, #0D9488, rgba(255, 255, 255, 0.1));
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #F43F5E;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+            animation: shimmer 2s infinite linear;
+        }
+        .timeline-connector {
+            position: absolute;
+            left: 19px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background: linear-gradient(180deg, #0D9488 0%, rgba(13, 148, 136, 0) 100%);
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0D9488",      /* Aurora Teal */
+                        "primary-hover": "#0f766e",
+                        "secondary": "#F43F5E",    /* Sunset Coral */
+                        "accent-gold": "#D97706",  /* Temple Gold */
+                        "obsidian": "#0B0F19",
+                        "slate-glass": "rgba(15, 23, 42, 0.65)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                        "frost-white": "#F8FAFC",
+                        "silver-sage": "#94A3B8",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden antialiased selection:bg-primary/30 selection:text-frost-white">
+
+    <!-- Ambient Background Lighting -->
+    <div class="fixed top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+    <div class="fixed top-1/3 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[130px] pointer-events-none z-0"></div>
+
+    <!-- Mock Multiplayer Pointers -->
+    <div id="mock-cursor-priya" class="absolute pointer-events-none z-[9999] transition-all duration-1000 hidden flex items-center gap-1.5" style="top: 30%; left: 40%;">
+        <span class="material-symbols-outlined text-blue-500 text-sm select-none" style="font-variation-settings: 'FILL' 1;">near_me</span>
+        <span class="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md select-none font-headline">Priya</span>
+    </div>
+    <div id="mock-cursor-sam" class="absolute pointer-events-none z-[9999] transition-all duration-1000 hidden flex items-center gap-1.5" style="top: 60%; left: 50%;">
+        <span class="material-symbols-outlined text-green-500 text-sm select-none" style="font-variation-settings: 'FILL' 1;">near_me</span>
+        <span class="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md select-none font-headline">Sam</span>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <nav class="relative w-full z-50 flex justify-between items-center px-8 md:px-20 h-20 bg-slate-glass border-b border-glass-border backdrop-blur-xl">
+        <div class="flex items-center gap-3" id="logo-container" style="cursor: pointer;">
+            <span class="material-symbols-outlined text-primary text-3xl font-bold">explore</span>
+            <span class="font-headline text-2xl font-bold tracking-tight text-frost-white">Traveller</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="#" id="nav-explore" class="text-silver-sage hover:text-frost-white transition-colors">Explore</a>
+            <a href="#" id="nav-itineraries" class="text-silver-sage hover:text-frost-white transition-colors hidden">Itineraries</a>
+            <a href="#" id="nav-insights" class="text-silver-sage hover:text-frost-white transition-colors hidden">Insights</a>
+            <!-- Collaborative avatars -->
+            <div id="collab-avatars" class="hidden items-center -space-x-2 overflow-hidden">
+                <div class="w-7 h-7 rounded-full border border-obsidian bg-blue-500 flex items-center justify-center text-[9px] font-bold text-white cursor-help" title="Priya (Online)">P</div>
+                <div class="w-7 h-7 rounded-full border border-obsidian bg-green-500 flex items-center justify-center text-[9px] font-bold text-white cursor-help" title="Sam (Online)">S</div>
+            </div>
+            <div class="w-10 h-10 rounded-full border border-glass-border flex items-center justify-center bg-slate-glass cursor-pointer hover:border-primary transition-all duration-300">
+                <span class="material-symbols-outlined text-silver-sage text-xl">person</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN VIEWPORT CONTAINER -->
+    <main class="relative flex-grow flex flex-col justify-center items-center px-4 md:px-20 py-12 z-10 w-full max-w-7xl mx-auto">
+        
+        <!-- ================= SCREEN 1: LANDING & INPUT ================= -->
+        <section id="screen-landing" class="w-full max-w-4xl flex flex-col items-center text-center py-8 animate-fade-in">
+            <!-- Hero Slogan -->
+            <h1 class="font-headline text-4xl md:text-6xl font-extrabold text-frost-white tracking-tight mb-6 leading-tight">
+                Your Next Journey, <br class="hidden md:inline"/>
+                <span class="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">Orchestrated in Seconds</span>
+            </h1>
+            <p class="text-lg md:text-xl text-silver-sage max-w-2xl mb-12 font-light leading-relaxed">
+                A multi-agent AI system that translates your wildest travel dreams into structured, budget-validated, and geographical-optimized itineraries.
+            </p>
+
+            <!-- Conversational Glass Panel Search Box -->
+            <div class="w-full glass-panel focus-glow rounded-3xl p-6 transition-all duration-300 flex flex-col gap-4 mb-8 shadow-2xl relative">
+                <div class="flex gap-4 items-start">
+                    <span class="material-symbols-outlined text-primary text-3xl mt-2">chat_bubble</span>
+                    <textarea 
+                        id="prompt-input"
+                        class="flex-grow bg-transparent border-0 outline-none focus:ring-0 p-0 text-frost-white placeholder:text-silver-sage/50 text-base md:text-lg resize-none min-h-[100px] max-h-[300px] custom-scrollbar" 
+                        placeholder="e.g., Plan a 5-day trip to Japan. Tokyo + Kyoto. $3,000 budget. Love food and temples, hate crowds."
+                    ></textarea>
+                </div>
+                <div class="flex justify-between items-center border-t border-glass-border pt-4">
+                    <div class="flex items-center text-xs text-silver-sage/60 gap-1.5" id="extraction-status-container">
+                        <span class="material-symbols-outlined text-sm">settings_suggest</span>
+                        <span id="extraction-status">Model: gemini-2.5-flash-lite</span>
+                    </div>
+                    <button 
+                        id="btn-orchestrate"
+                        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-emerald-500 hover:opacity-90 active:scale-95 text-frost-white font-semibold rounded-full shadow-lg transition-all duration-300"
+                    >
+                        <span class="material-symbols-outlined text-lg" id="orchestrate-icon">auto_awesome</span>
+                        <span id="orchestrate-text">Orchestrate</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Start Prompt Chips -->
+            <div class="flex flex-col items-center gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wider text-silver-sage/50">Suggested Journeys</span>
+                <div class="flex flex-wrap justify-center gap-3 max-w-2xl">
+                    <button class="prompt-chip px-5 py-2.5 rounded-full glass-panel hover:bg-slate-800 hover:border-primary text-sm text-silver-sage hover:text-frost-white active:scale-95 transition-all duration-300 cursor-pointer" data-prompt="Plan a 5-day trip to Japan. Tokyo + Kyoto. $3,000 budget. Love food and temples, hate crowds.">
+                        🌸 5-Day Tokyo & Kyoto Foodie
+                    </button>
+                    <button class="prompt-chip px-5 py-2.5 rounded-full glass-panel hover:bg-slate-800 hover:border-primary text-sm text-silver-sage hover:text-frost-white active:scale-95 transition-all duration-300 cursor-pointer" data-prompt="10 days in Italy: Rome, Florence, Venice. $5000 budget. Love art, history, and wine. Avoid long bus rides.">
+                        🏰 10-Day Italy Art & Wine
+                    </button>
+                    <button class="prompt-chip px-5 py-2.5 rounded-full glass-panel hover:bg-slate-800 hover:border-primary text-sm text-silver-sage hover:text-frost-white active:scale-95 transition-all duration-300 cursor-pointer" data-prompt="Spontaneous 3-day beach getaway to Goa. Under $600. Just want relaxation, beaches, and local sea food. No museums.">
+                        🏖️ 3-Day Goa Relaxing Escape
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 2: CONSTRAINT EDITOR & AGENT PIPELINE ================= -->
+        <section id="screen-editor" class="w-full hidden flex-col md:flex-row gap-10 py-4 max-w-6xl">
+            <!-- Left Column: Constraint Editor -->
+            <div class="w-full md:w-[48%] glass-panel rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl">
+                <div>
+                    <h3 class="font-headline text-2xl font-bold text-primary mb-1">Extracted Travel Constraints</h3>
+                    <p class="text-silver-sage text-sm">Refine the AI's understanding of your journey.</p>
+                </div>
+                
+                <div class="space-y-5">
+                    <!-- Destination Tags -->
+                    <div class="space-y-2">
+                        <label class="text-xs uppercase tracking-wider font-semibold text-silver-sage">Destination Cities</label>
+                        <div class="flex flex-wrap gap-2 p-3 rounded-xl bg-black/20 border border-glass-border" id="cities-container">
+                            <!-- Injected dynamically -->
+                            <button class="text-primary/60 hover:text-primary material-symbols-outlined text-[20px] self-center" id="btn-add-city">add_circle</button>
+                        </div>
+                    </div>
+
+                    <!-- Trip Duration -->
+                    <div class="space-y-2">
+                        <label class="text-xs uppercase tracking-wider font-semibold text-silver-sage">Trip Duration</label>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-glass-border">
+                            <button id="btn-duration-minus" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center border border-glass-border active:scale-95 transition-all">
+                                <span class="material-symbols-outlined text-silver-sage">remove</span>
+                            </button>
+                            <span id="duration-val" class="font-headline text-xl font-bold text-frost-white">5 Days</span>
+                            <button id="btn-duration-plus" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center border border-glass-border active:scale-95 transition-all">
+                                <span class="material-symbols-outlined text-silver-sage">add</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Total Budget -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs uppercase tracking-wider font-semibold text-silver-sage">Total Budget (USD)</label>
+                            <span id="budget-val" class="text-secondary font-bold text-xl">$3,000</span>
+                        </div>
+                        <input id="budget-slider" class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-secondary" max="10000" min="500" step="100" type="range" value="3000"/>
+                    </div>
+
+                    <!-- Preferences & Avoidances -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-xs uppercase tracking-wider font-semibold text-silver-sage">Preferences</label>
+                            <div class="space-y-1.5" id="preferences-container">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs uppercase tracking-wider font-semibold text-silver-sage">Avoidances</label>
+                            <div class="space-y-1.5" id="avoidances-container">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 pt-4 border-t border-glass-border">
+                    <button id="btn-editor-back" class="flex-1 px-6 py-3.5 rounded-xl border border-glass-border hover:bg-white/5 transition-all text-sm font-semibold text-silver-sage hover:text-frost-white active:scale-95">Edit Prompt</button>
+                    <button id="btn-generate" class="flex-1 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary to-emerald-500 text-frost-white font-bold text-sm shadow-[0_0_20px_rgba(13,148,136,0.3)] hover:opacity-95 transition-all active:scale-95">Generate Itinerary</button>
+                </div>
+            </div>
+
+            <!-- Vertical Divider -->
+            <div class="hidden md:block w-px bg-gradient-to-b from-transparent via-glass-border to-transparent"></div>
+
+            <!-- Right Column: AI Orchestration Pipeline -->
+            <div class="w-full md:w-[48%] flex flex-col gap-6">
+                <div class="flex items-center gap-4">
+                    <span class="text-xs uppercase tracking-[0.2em] font-semibold text-silver-sage/60">AI Agent Orchestration Pipeline</span>
+                    <div class="flex-grow h-px bg-glass-border"></div>
+                </div>
+
+                <!-- Pipeline Nodes -->
+                <div class="relative pl-10 flex flex-col gap-8 py-2" id="pipeline-nodes-container">
+                    <!-- Progress Line -->
+                    <div class="absolute left-[19px] top-4 bottom-4 w-[2px] node-line"></div>
+
+                    <!-- Node 1: Orchestrator -->
+                    <div class="relative flex items-start gap-4 transition-opacity duration-300" id="node-1">
+                        <div class="w-10 h-10 rounded-full bg-primary border border-glass-border flex items-center justify-center z-10 bg-slate-glass shadow-lg" id="node-1-icon">
+                            <span class="material-symbols-outlined text-[18px] text-frost-white font-bold">check</span>
+                        </div>
+                        <div class="pt-1">
+                            <p class="font-headline text-base font-bold text-frost-white" id="node-1-title">Orchestrator Agent</p>
+                            <p class="text-xs text-emerald" id="node-1-desc">Parsed constraints from prompt successfully.</p>
+                        </div>
+                    </div>
+
+                    <!-- Node 2: Destination -->
+                    <div class="relative flex items-start gap-4 opacity-40 transition-opacity duration-300" id="node-2">
+                        <div class="w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg" id="node-2-icon">
+                            <span class="material-symbols-outlined text-[18px] text-silver-sage">search</span>
+                        </div>
+                        <div class="pt-1">
+                            <p class="font-headline text-base font-bold text-frost-white" id="node-2-title">Destination Research Agent</p>
+                            <p class="text-xs text-silver-sage" id="node-2-desc">Pending curation pipeline start...</p>
+                        </div>
+                    </div>
+
+                    <!-- Node 3: Logistics -->
+                    <div class="relative flex items-start gap-4 opacity-40 transition-opacity duration-300" id="node-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg" id="node-3-icon">
+                            <span class="material-symbols-outlined text-[18px] text-silver-sage">route</span>
+                        </div>
+                        <div class="pt-1">
+                            <p class="font-headline text-base font-bold text-frost-white" id="node-3-title">Logistics &amp; Transit Agent</p>
+                            <p class="text-xs text-silver-sage" id="node-3-desc">Waiting for destination choices...</p>
+                        </div>
+                    </div>
+
+                    <!-- Node 4: Budget -->
+                    <div class="relative flex items-start gap-4 opacity-40 transition-opacity duration-300" id="node-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg" id="node-4-icon">
+                            <span class="material-symbols-outlined text-[18px] text-silver-sage">payments</span>
+                        </div>
+                        <div class="pt-1">
+                            <p class="font-headline text-base font-bold text-frost-white" id="node-4-title">Budget Optimization Agent</p>
+                            <p class="text-xs text-silver-sage" id="node-4-desc">Waiting for itinerary schedule...</p>
+                        </div>
+                    </div>
+
+                    <!-- Node 5: Review -->
+                    <div class="relative flex items-start gap-4 opacity-40 transition-opacity duration-300" id="node-5">
+                        <div class="w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg" id="node-5-icon">
+                            <span class="material-symbols-outlined text-[18px] text-silver-sage">fact_check</span>
+                        </div>
+                        <div class="pt-1">
+                            <p class="font-headline text-base font-bold text-frost-white" id="node-5-title">Consistency Review Agent</p>
+                            <p class="text-xs text-silver-sage" id="node-5-desc">Final verification checks...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Agent Feed Card -->
+                <div class="mt-auto glass-panel p-5 rounded-2xl border-primary/10 relative overflow-hidden" id="feed-card">
+                    <div class="absolute top-0 left-0 w-full h-1 overflow-hidden" id="shimmer-container">
+                        <div class="h-full bg-primary animate-shimmer" style="background-image: linear-gradient(90deg, transparent, #6bd8cb, transparent); background-size: 200% 100%;"></div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0" id="feed-spinner-container">
+                            <span class="material-symbols-outlined text-primary text-2xl animate-pulse">check_circle</span>
+                        </div>
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold text-primary uppercase" id="feed-status-title">System Ready</span>
+                                <span class="text-[10px] text-silver-sage" id="feed-addr-code">SEC-200 // OK</span>
+                            </div>
+                            <p id="feed-status-desc" class="text-sm text-silver-sage leading-relaxed">
+                                Constraints loaded. Review extracted values and click 'Generate Itinerary' to start generation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 3: MOCK SUCCESS CONTAINER (SPRINT 7 PLACEHOLDER) ================= -->
+        <section id="screen-success" class="w-full max-w-4xl hidden flex-col items-center text-center py-8 animate-fade-in">
+            <div class="glass-panel rounded-3xl p-8 md:p-12 w-full flex flex-col items-center gap-6 shadow-2xl">
+                <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <span class="material-symbols-outlined text-3xl">check_circle</span>
+                </div>
+                <h2 class="font-headline text-3xl font-bold text-frost-white">Itinerary Successfully Synthesized!</h2>
+                <p class="text-silver-sage text-sm max-w-md">
+                    Sprint 7 successfully executed the multi-agent pipeline and generated a complete travel plan.
+                </p>
+                <div class="text-left bg-black/45 p-5 rounded-2xl border border-glass-border w-full max-h-[300px] overflow-y-auto custom-scrollbar font-mono text-xs text-primary leading-relaxed">
+                    <pre id="success-json-display"></pre>
+                </div>
+                <button id="btn-success-back" class="px-6 py-2.5 rounded-full border border-glass-border text-silver-sage hover:text-frost-white hover:border-primary active:scale-95 transition-all">
+                    Generate Another
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= SCREEN 3: ITINERARY DASHBOARD ================= -->
+    <div id="screen-dashboard" class="hidden flex-grow flex flex-col-reverse md:flex-row w-full h-[calc(100vh-80px)] overflow-hidden z-10 relative">
+        <!-- Left: Scrollable Timeline (40%) -->
+        <aside class="w-full md:w-[40%] h-[50vh] md:h-full overflow-y-auto custom-scrollbar px-6 md:px-10 py-8 flex flex-col gap-6 relative" id="timeline-container">
+            <!-- Day accordion cards injected dynamically -->
+        </aside>
+
+        <!-- Right: Immersive Map (60%) -->
+        <section class="w-full md:w-[60%] h-[50vh] md:h-full relative bg-[#05070a]">
+            <!-- Map Viewport -->
+            <div id="map" class="absolute inset-0 w-full h-full" style="z-index: 1;"></div>
+            
+            <!-- Map Floating Actions: Top Right -->
+            <div class="absolute top-6 right-6 flex flex-col sm:flex-row gap-3 z-[100]">
+                <button id="btn-open-copilot" class="glass-panel px-6 py-3 rounded-full text-frost-white flex items-center gap-2 hover:bg-white/10 transition-all group active:scale-95 bg-primary/10 border-primary/20 hover:border-primary/50">
+                    <span class="material-symbols-outlined text-sm text-primary animate-pulse">auto_awesome</span>
+                    <span class="text-sm font-medium text-primary">Co-Pilot</span>
+                </button>
+                <button id="btn-export-pdf" class="glass-panel px-6 py-3 rounded-full text-frost-white flex items-center gap-2 hover:bg-white/10 transition-all group active:scale-95">
+                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                    <span class="text-sm font-medium">Export PDF</span>
+                </button>
+                <button id="btn-add-calendar" class="glass-panel px-6 py-3 rounded-full text-frost-white flex items-center gap-2 hover:bg-white/10 transition-all group active:scale-95">
+                    <span class="material-symbols-outlined text-sm">event</span>
+                    <span class="text-sm font-medium">Add to Google Calendar</span>
+                </button>
+                <button id="btn-share-plan" class="bg-primary px-6 py-3 rounded-full text-on-primary flex items-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-sm">share</span>
+                    <span class="text-sm font-semibold">Share Plan</span>
+                </button>
+            </div>
+
+            <!-- Map Summary: Bottom Left -->
+            <div class="absolute bottom-10 left-10 glass-panel p-6 rounded-lg min-w-[320px] aurora-glow z-[100]">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-silver-sage text-xs uppercase tracking-widest font-bold">Review Status</span>
+                    <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                        <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        <span id="review-status-badge" class="text-[10px] font-bold uppercase">Passed</span>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end">
+                        <div class="flex flex-col">
+                            <span id="total-cost-val" class="text-2xl font-headline font-bold text-frost-white">$0</span>
+                            <span class="text-[10px] text-silver-sage uppercase">Total Cost</span>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span id="remaining-budget-val" class="text-2xl font-headline font-bold text-primary">$0</span>
+                            <span class="text-[10px] text-silver-sage uppercase">Remaining</span>
+                        </div>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div id="budget-progress-bar" class="h-full bg-gradient-to-r from-aurora-teal to-primary w-0 rounded-full shadow-[0_0_8px_rgba(107,216,203,0.5)]"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ================= SCREEN 4: BUDGET DASHBOARD ================= -->
+    <div id="screen-budget" class="hidden flex-grow flex flex-col w-full h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar px-6 md:px-20 py-10 z-10 relative">
+        <!-- Dashboard Header -->
+        <header class="space-y-2 mb-10">
+            <h1 class="font-headline text-3xl md:text-4xl font-extrabold text-frost-white">Financial Workspace</h1>
+            <p class="font-body-lg text-lg text-silver-sage max-w-2xl">Real-time budget analysis and AI-driven cost forecasting for your trip.</p>
+        </header>
+
+        <!-- Top Row (3 Gauges) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <!-- Spent vs Remaining Circular Gauge -->
+            <div class="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-6 aurora-glow relative overflow-hidden">
+                <div class="relative w-44 h-44 flex items-center justify-center">
+                    <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.05)" stroke-width="6" fill="transparent" />
+                        <circle id="circular-svg-gauge" cx="50" cy="50" r="40" stroke="#0D9488" stroke-width="6" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2" style="transition: stroke-dashoffset 0.5s ease;" />
+                    </svg>
+                    <div class="text-center z-10">
+                        <p id="gauge-spent-val" class="font-headline text-2xl font-bold text-frost-white">$0</p>
+                        <p class="text-[10px] text-silver-sage uppercase tracking-widest">Spent</p>
+                        <div class="h-px w-8 bg-glass-border mx-auto my-1.5"></div>
+                        <p id="gauge-total-val" class="text-xs text-silver-sage">$3,000 total</p>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p id="gauge-under-over-val" class="text-sm text-emerald-400 flex items-center justify-center gap-2 font-semibold">
+                        <span class="material-symbols-outlined text-[18px]">trending_down</span>
+                        Under budget
+                    </p>
+                    <p id="gauge-percent-val" class="text-xs text-silver-sage">0% consumed</p>
+                </div>
+            </div>
+
+            <!-- Cost Forecast -->
+            <div class="glass-panel rounded-2xl p-8 flex flex-col justify-between space-y-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-headline text-lg font-bold text-frost-white">Cost Forecast</h3>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                            <p class="text-xs text-primary font-semibold">Review Agent Confidence: 95%</p>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined text-silver-sage">query_stats</span>
+                </div>
+                <!-- Sparkline Chart Mockup -->
+                <div class="relative h-20 w-full flex items-end gap-1.5" id="sparkline-bars">
+                    <!-- Dynamic bars will be rendered here -->
+                </div>
+                <div class="flex justify-between text-silver-sage text-[10px] font-semibold tracking-wider">
+                    <span>Day 1</span>
+                    <span>Midpoint</span>
+                    <span id="forecast-end-day">Day 5</span>
+                </div>
+            </div>
+
+            <!-- What-If Optimizer -->
+            <div class="glass-panel rounded-2xl p-8 flex flex-col justify-between space-y-6 border-l-4 border-l-primary">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-primary/10 rounded-full">
+                        <span class="material-symbols-outlined text-primary text-lg">psychology</span>
+                    </div>
+                    <h3 class="font-headline text-lg font-bold text-frost-white">"What-If" Optimizer</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs uppercase tracking-wider font-semibold text-silver-sage">Target Budget Ceiling</label>
+                        <span id="whatif-budget-val" class="text-primary font-bold text-lg">$1,500</span>
+                    </div>
+                    <input id="whatif-slider" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" max="5000" min="500" step="100" type="range" value="1500"/>
+                    <div class="flex justify-between text-[10px] text-silver-sage">
+                        <span>$500</span>
+                        <span>$5,000</span>
+                    </div>
+                </div>
+                <div class="p-4 bg-black/20 rounded-xl border border-glass-border">
+                    <p class="text-xs text-frost-white leading-relaxed">
+                        <span class="text-primary font-bold">AI Suggestion:</span> <span id="whatif-suggestion">Drag the slider to analyze and request cost-reduction changes.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Allocation Breakdown section -->
+        <section class="space-y-6 mb-10">
+            <h2 class="font-headline text-xl font-bold text-frost-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">category</span>
+                Allocation Breakdown
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6" id="budget-category-grid">
+                <!-- Dynamically populated category cards -->
+            </div>
+        </section>
+
+        <!-- CTA Action Bar -->
+        <section class="glass-panel rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+            <div class="flex items-center gap-4">
+                <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(13,148,136,0.4)]">
+                    <span class="material-symbols-outlined text-frost-white">rocket_launch</span>
+                </div>
+                <div>
+                    <h4 class="font-headline text-lg font-bold text-frost-white">Finalize Itinerary</h4>
+                    <p class="text-xs text-silver-sage">Lock in these prices and generate your bookings.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 w-full md:w-auto">
+                <button class="flex-1 md:flex-none px-8 py-3 rounded-full border border-glass-border text-frost-white hover:bg-white/5 transition-all active:scale-95 text-sm font-semibold">Save Draft</button>
+                <button id="btn-budget-book" class="flex-1 md:flex-none px-8 py-3 rounded-full bg-gradient-to-r from-primary to-emerald-500 font-semibold text-frost-white shadow-lg hover:opacity-90 transition-all active:scale-95 text-sm">Confirm & Book</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ================= SCREEN 5: CO-PILOT CHAT DRAWER ================= -->
+    <aside id="copilot-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[35%] sm:min-w-[400px] z-50 glass-panel border-l border-glass-border shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+        <!-- Drawer Header -->
+        <div class="p-6 border-b border-glass-border flex justify-between items-center bg-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                </div>
+                <div>
+                    <h2 class="font-headline text-base font-bold text-frost-white leading-tight">AI Travel Co-Pilot</h2>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                        <span class="text-[10px] font-semibold text-silver-sage tracking-wider">ONLINE &amp; COLLABORATING</span>
+                    </div>
+                </div>
+            </div>
+            <button id="btn-close-copilot" class="p-2 hover:bg-white/10 rounded-full transition-colors text-silver-sage hover:text-frost-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Chat History -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar" id="copilot-chat-history">
+            <!-- Messages will be injected dynamically -->
+            <!-- Initial Greeting -->
+            <div class="flex flex-col items-start space-y-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary">
+                        <span class="material-symbols-outlined text-[10px]">auto_awesome</span>
+                    </div>
+                    <span class="text-[10px] text-primary font-bold uppercase tracking-wider">Co-Pilot</span>
+                </div>
+                <div class="max-w-[90%] bg-primary/5 border border-primary/20 p-4 rounded-2xl rounded-tl-none text-xs text-on-surface leading-relaxed">
+                    Hello! I'm your AI Travel Co-Pilot. I can help refine your itinerary, adjust schedules, or optimize the budget. Tell me what changes you'd like to make!
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Diff Card Display (Shows when refinement returns changes) -->
+        <div id="copilot-diff-card-container" class="px-6 py-4 border-t border-glass-border bg-black/10 hidden">
+            <div class="bg-surface-container-lowest border border-glass-border rounded-xl p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-silver-sage uppercase tracking-wider">Proposed Changes</span>
+                    <span class="bg-emerald-500/10 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-500/20 uppercase">Optimized</span>
+                </div>
+                <div class="space-y-3 font-medium text-xs max-h-[150px] overflow-y-auto custom-scrollbar" id="copilot-diff-list">
+                    <!-- Diff list elements injected dynamically -->
+                </div>
+                <button id="btn-apply-changes" class="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-emerald-500 hover:opacity-90 active:scale-95 text-frost-white font-semibold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    Apply Changes to Itinerary
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-6 border-t border-glass-border bg-white/5">
+            <!-- Collaboration Activity Notification -->
+            <div class="flex justify-center mb-4">
+                <div class="bg-slate-800/60 px-4 py-1.5 rounded-full border border-glass-border flex items-center gap-2 text-[10px]">
+                    <div class="flex -space-x-1">
+                        <div class="w-4 h-4 rounded-full border border-obsidian bg-blue-500 flex items-center justify-center font-bold text-white text-[8px]">P</div>
+                        <div class="w-4 h-4 rounded-full border border-obsidian bg-green-500 flex items-center justify-center font-bold text-white text-[8px]">S</div>
+                    </div>
+                    <span class="text-silver-sage font-medium"><span id="collab-names">Priya and Sam</span> are editing...</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-slate-900/50 border border-glass-border rounded-full p-1 pl-4 focus-within:border-primary/50 transition-colors">
+                <input id="copilot-chat-input" class="flex-1 bg-transparent border-none focus:ring-0 text-xs text-on-surface placeholder:text-silver-sage/40" placeholder="Ask AI to adjust your trip..." type="text"/>
+                <div class="flex items-center gap-0.5 pr-1">
+                    <button class="p-1.5 hover:bg-white/10 rounded-full transition-colors text-silver-sage" title="Attach Files">
+                        <span class="material-symbols-outlined text-sm">attach_file</span>
+                    </button>
+                    <button id="btn-send-chat" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-frost-white shadow-lg active:scale-95 transition-transform shrink-0">
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ================= GLASSMORPHIC ALERT MODAL ================= -->
+    <div id="alert-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center hidden" style="transition: all 0.3s ease;">
+        <div class="glass-panel rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-glass-border flex flex-col items-center text-center space-y-6 transform scale-95 transition-all duration-300" id="alert-modal-card">
+            <div id="alert-modal-icon-container" class="w-14 h-14 rounded-full flex items-center justify-center bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                <span id="alert-modal-icon" class="material-symbols-outlined text-3xl">error</span>
+            </div>
+            <div class="space-y-2">
+                <h3 id="alert-modal-title" class="font-headline text-lg font-bold text-frost-white">Connection Error</h3>
+                <p id="alert-modal-message" class="text-xs text-silver-sage leading-relaxed">Could not reach the AI planner server.</p>
+            </div>
+            <button id="btn-close-alert" class="px-6 py-2.5 rounded-full bg-white/5 border border-glass-border text-silver-sage hover:text-frost-white hover:border-primary active:scale-95 transition-all text-xs font-semibold">
+                Dismiss
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer Partners -->
+    <footer class="relative w-full z-10 flex flex-col sm:flex-row justify-between items-center px-8 md:px-20 py-8 border-t border-glass-border/30 bg-transparent text-xs text-silver-sage/40 gap-4">
+        <div class="flex items-center gap-6 flex-wrap justify-center font-headline">
+            <span>Booking.com</span>
+            <span>Agoda</span>
+            <span>Google Flights</span>
+            <span>Airbnb</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm text-primary">verified</span>
+            <span>Powered by Gemini 2.5 Flash Lite</span>
+        </div>
+    </footer>
+
+    <!-- SPA Application Controller -->
+    <script>
+        // Core application state
+        const appState = {
+            userInputPrompt: "",
+            parsedConstraints: null,
+            generatedItinerary: null
+        };
+
+        // API Base URL config: empty for local FastAPI serving, Railway URL for production Vercel
+        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '::1')
+            ? ''
+            : 'https://traveller-backend-production.up.railway.app'; // Update this with your Railway backend URL
+
+        // Screen DOM elements
+        const screenLanding = document.getElementById("screen-landing");
+        const screenEditor = document.getElementById("screen-editor");
+        const screenSuccess = document.getElementById("screen-success");
+
+        // Input DOM elements
+        const promptInput = document.getElementById("prompt-input");
+        const btnOrchestrate = document.getElementById("btn-orchestrate");
+        const extractionStatus = document.getElementById("extraction-status");
+        const orchestrateIcon = document.getElementById("orchestrate-icon");
+        const orchestrateText = document.getElementById("orchestrate-text");
+
+        // Editor DOM elements
+        const citiesContainer = document.getElementById("cities-container");
+        const btnAddCity = document.getElementById("btn-add-city");
+        const btnDurationMinus = document.getElementById("btn-duration-minus");
+        const btnDurationPlus = document.getElementById("btn-duration-plus");
+        const durationVal = document.getElementById("duration-val");
+        const budgetVal = document.getElementById("budget-val");
+        const budgetSlider = document.getElementById("budget-slider");
+        const preferencesContainer = document.getElementById("preferences-container");
+        const avoidancesContainer = document.getElementById("avoidances-container");
+        const btnEditorBack = document.getElementById("btn-editor-back");
+        const btnGenerate = document.getElementById("btn-generate");
+
+        // Pipeline Animation Elements
+        const node2 = document.getElementById("node-2");
+        const node3 = document.getElementById("node-3");
+        const node4 = document.getElementById("node-4");
+        const node5 = document.getElementById("node-5");
+
+        const node2Icon = document.getElementById("node-2-icon");
+        const node3Icon = document.getElementById("node-3-icon");
+        const node4Icon = document.getElementById("node-4-icon");
+        const node5Icon = document.getElementById("node-5-icon");
+
+        const node2Desc = document.getElementById("node-2-desc");
+        const node3Desc = document.getElementById("node-3-desc");
+        const node4Desc = document.getElementById("node-4-desc");
+        const node5Desc = document.getElementById("node-5-desc");
+
+        const feedStatusTitle = document.getElementById("feed-status-title");
+        const feedAddrCode = document.getElementById("feed-addr-code");
+        const feedStatusDesc = document.getElementById("feed-status-desc");
+        const feedSpinnerContainer = document.getElementById("feed-spinner-container");
+
+        // Success elements
+        const successJsonDisplay = document.getElementById("success-json-display");
+        const btnSuccessBack = document.getElementById("btn-success-back");
+
+        // Map and Dashboard variables
+        let map = null;
+        let mapMarkers = [];
+        let routeLine = null;
+        const screenDashboard = document.getElementById("screen-dashboard");
+        const timelineContainer = document.getElementById("timeline-container");
+
+        // Chips
+        const chips = document.querySelectorAll(".prompt-chip");
+
+        // Helper: Toggle screens
+        const screenBudget = document.getElementById("screen-budget");
+
+        function showModalAlert(title, message, iconType = "error") {
+            const modal = document.getElementById("alert-modal");
+            const card = document.getElementById("alert-modal-card");
+            const iconContainer = document.getElementById("alert-modal-icon-container");
+            const icon = document.getElementById("alert-modal-icon");
+            const titleEl = document.getElementById("alert-modal-title");
+            const msgEl = document.getElementById("alert-modal-message");
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            iconContainer.className = "w-14 h-14 rounded-full flex items-center justify-center border ";
+            if (iconType === "error") {
+                icon.textContent = "error";
+                iconContainer.classList.add("bg-rose-500/10", "border-rose-500/20", "text-rose-400");
+            } else if (iconType === "warning") {
+                icon.textContent = "warning";
+                iconContainer.classList.add("bg-amber-500/10", "border-amber-500/20", "text-amber-400");
+            } else {
+                icon.textContent = "check_circle";
+                iconContainer.classList.add("bg-emerald-500/10", "border-emerald-500/20", "text-emerald-400");
+            }
+
+            modal.classList.remove("hidden");
+            setTimeout(() => {
+                card.classList.remove("scale-95");
+                card.classList.add("scale-100");
+            }, 10);
+        }
+
+        function hideModalAlert() {
+            const modal = document.getElementById("alert-modal");
+            const card = document.getElementById("alert-modal-card");
+            card.classList.remove("scale-100");
+            card.classList.add("scale-95");
+            setTimeout(() => {
+                modal.classList.add("hidden");
+            }, 150);
+        }
+
+        document.getElementById("btn-close-alert").addEventListener("click", hideModalAlert);
+
+        function updateMultiplayerCursorsVisibility(show) {
+            const cursorPriya = document.getElementById("mock-cursor-priya");
+            const cursorSam = document.getElementById("mock-cursor-sam");
+            if (cursorPriya && cursorSam) {
+                if (show) {
+                    cursorPriya.classList.remove("hidden");
+                    cursorSam.classList.remove("hidden");
+                } else {
+                    cursorPriya.classList.add("hidden");
+                    cursorSam.classList.add("hidden");
+                }
+            }
+        }
+
+        function updateNavbar() {
+            if (appState.generatedItinerary) {
+                document.getElementById("nav-itineraries").classList.remove("hidden");
+                document.getElementById("nav-insights").classList.remove("hidden");
+                document.getElementById("collab-avatars").classList.remove("hidden");
+                document.getElementById("collab-avatars").classList.add("flex");
+            }
+        }
+
+        function showScreen(screenId) {
+            screenLanding.classList.add("hidden");
+            screenLanding.classList.remove("flex");
+            screenEditor.classList.add("hidden");
+            screenEditor.classList.remove("flex");
+            screenSuccess.classList.add("hidden");
+            screenSuccess.classList.remove("flex");
+            screenDashboard.classList.add("hidden");
+            screenDashboard.classList.remove("flex");
+            if (screenBudget) {
+                screenBudget.classList.add("hidden");
+                screenBudget.classList.remove("flex");
+            }
+
+            const mainContainer = document.querySelector("main");
+            const footerContainer = document.querySelector("footer");
+
+            // Update active state in nav links
+            const navExplore = document.getElementById("nav-explore");
+            const navItineraries = document.getElementById("nav-itineraries");
+            const navInsights = document.getElementById("nav-insights");
+
+            [navExplore, navItineraries, navInsights].forEach(link => {
+                if (link) {
+                    link.classList.remove("text-primary", "font-bold", "border-b-2", "border-primary", "pb-1");
+                    link.classList.add("text-silver-sage");
+                }
+            });
+
+            if (screenId === "dashboard" || screenId === "budget") {
+                // Hide main wrapper and footer
+                mainContainer.classList.add("hidden");
+                footerContainer.classList.add("hidden");
+
+                // Adjust body class to prevent outer scrolling
+                document.body.classList.add("h-screen", "overflow-hidden");
+                document.body.classList.remove("min-h-screen");
+
+                updateMultiplayerCursorsVisibility(true);
+
+                if (screenId === "dashboard") {
+                    screenDashboard.classList.remove("hidden");
+                    screenDashboard.classList.add("flex");
+                    if (navItineraries) {
+                        navItineraries.classList.add("text-primary", "font-bold", "border-b-2", "border-primary", "pb-1");
+                        navItineraries.classList.remove("text-silver-sage");
+                    }
+                    if (map) {
+                        setTimeout(() => map.invalidateSize(), 150);
+                    }
+                } else if (screenId === "budget") {
+                    if (screenBudget) {
+                        screenBudget.classList.remove("hidden");
+                        screenBudget.classList.add("flex");
+                    }
+                    if (navInsights) {
+                        navInsights.classList.add("text-primary", "font-bold", "border-b-2", "border-primary", "pb-1");
+                        navInsights.classList.remove("text-silver-sage");
+                    }
+                }
+            } else {
+                // Show main wrapper and footer
+                mainContainer.classList.remove("hidden");
+                footerContainer.classList.remove("hidden");
+
+                // Restore body scrollable style
+                document.body.classList.remove("h-screen", "overflow-hidden");
+                document.body.classList.add("min-h-screen");
+
+                updateMultiplayerCursorsVisibility(false);
+
+                if (navExplore) {
+                    navExplore.classList.add("text-primary", "font-bold", "border-b-2", "border-primary", "pb-1");
+                    navExplore.classList.remove("text-silver-sage");
+                }
+
+                if (screenId === "landing") {
+                    screenLanding.classList.remove("hidden");
+                    screenLanding.classList.add("flex");
+                } else if (screenId === "editor") {
+                    screenEditor.classList.remove("hidden");
+                    screenEditor.classList.add("flex");
+                } else if (screenId === "success") {
+                    screenSuccess.classList.remove("hidden");
+                    screenSuccess.classList.add("flex");
+                }
+            }
+        }
+
+        // Action: Submit prompt to /api/extract
+        async function handleOrchestrate() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                alert("Please enter a travel request!");
+                return;
+            }
+
+            appState.userInputPrompt = prompt;
+
+            // Loading state in orchestrate button
+            btnOrchestrate.disabled = true;
+            orchestrateText.textContent = "Parsing...";
+            orchestrateIcon.classList.add("animate-spin");
+            orchestrateIcon.textContent = "progress_activity";
+
+            try {
+                const response = await fetch(API_BASE_URL + "/api/extract", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (!response.ok) {
+                    throw new Error("API request failed");
+                }
+
+                const constraints = await response.json();
+                appState.parsedConstraints = constraints;
+                populateEditorFields(constraints);
+                resetPipelineUI();
+                showScreen("editor");
+
+            } catch (err) {
+                console.warn("API unavailable, falling back to mock constraint data.", err);
+                showModalAlert("Extraction Service Offline", "Could not reach the Traveller backend. The application will continue in offline simulation mode with default extracted constraints.", "warning");
+                const mockConstraints = getMockConstraints(prompt);
+                appState.parsedConstraints = mockConstraints;
+                populateEditorFields(mockConstraints);
+                resetPipelineUI();
+                showScreen("editor");
+            } finally {
+                btnOrchestrate.disabled = false;
+                orchestrateText.textContent = "Orchestrate";
+                orchestrateIcon.classList.remove("animate-spin");
+                orchestrateIcon.textContent = "auto_awesome";
+            }
+        }
+
+        // Helper: Populate Constraint Editor Fields
+        function populateEditorFields(constraints) {
+            // 1. Render Destination Cities
+            citiesContainer.querySelectorAll(".city-tag").forEach(el => el.remove());
+            constraints.cities.forEach(city => {
+                const span = document.createElement("span");
+                span.className = "city-tag flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm border border-primary/20 font-medium";
+                span.innerHTML = `${city} <button class="material-symbols-outlined text-[16px] hover:text-secondary self-center flex items-center justify-center">close</button>`;
+                
+                // Add click listener to close button
+                span.querySelector("button").addEventListener("click", () => {
+                    span.remove();
+                    appState.parsedConstraints.cities = appState.parsedConstraints.cities.filter(c => c !== city);
+                });
+                
+                citiesContainer.insertBefore(span, btnAddCity);
+            });
+
+            // 2. Set Duration
+            durationVal.textContent = `${constraints.duration_days} Days`;
+            
+            // 3. Set Budget
+            budgetSlider.value = constraints.budget_usd;
+            budgetVal.textContent = `$${parseInt(constraints.budget_usd).toLocaleString()}`;
+
+            // 4. Render Preferences
+            preferencesContainer.innerHTML = "";
+            constraints.preferences.forEach(pref => {
+                const div = document.createElement("div");
+                div.className = "px-3 py-2 rounded-xl border border-primary/30 bg-primary/5 text-sm text-primary flex justify-between items-center";
+                div.innerHTML = `<span>${pref}</span> <span class="material-symbols-outlined text-sm opacity-40 hover:opacity-100 hover:text-secondary cursor-pointer">close</span>`;
+                div.querySelector(".material-symbols-outlined").addEventListener("click", () => {
+                    div.remove();
+                    appState.parsedConstraints.preferences = appState.parsedConstraints.preferences.filter(p => p !== pref);
+                });
+                preferencesContainer.appendChild(div);
+            });
+
+            // 5. Render Avoidances
+            avoidancesContainer.innerHTML = "";
+            constraints.avoidances.forEach(av => {
+                const div = document.createElement("div");
+                div.className = "px-3 py-2 rounded-xl border border-secondary/30 bg-secondary/5 text-sm text-secondary flex justify-between items-center";
+                div.innerHTML = `<span>${av}</span> <span class="material-symbols-outlined text-sm opacity-40 hover:opacity-100 hover:text-primary cursor-pointer">close</span>`;
+                div.querySelector(".material-symbols-outlined").addEventListener("click", () => {
+                    div.remove();
+                    appState.parsedConstraints.avoidances = appState.parsedConstraints.avoidances.filter(a => a !== av);
+                });
+                avoidancesContainer.appendChild(div);
+            });
+        }
+
+        // Mock Fallback Constraints Generator
+        function getMockConstraints(prompt) {
+            let destination = "Japan";
+            let cities = ["Tokyo", "Kyoto"];
+            if (prompt.toLowerCase().includes("italy")) {
+                destination = "Italy";
+                cities = ["Rome", "Florence", "Venice"];
+            } else if (prompt.toLowerCase().includes("goa")) {
+                destination = "India";
+                cities = ["Goa"];
+            }
+            return {
+                destination: destination,
+                cities: cities,
+                duration_days: 5,
+                budget_usd: 3000,
+                preferences: ["Food & Dining", "Temples & History", "Nature Walks"],
+                avoidances: ["Large Crowds", "Early Mornings", "Luxury Hotels"],
+                travel_style: "independent",
+                accommodation_preference: "mid-range"
+            };
+        }
+
+        // Reset Pipeline UI
+        function resetPipelineUI() {
+            // Reset opacity and state
+            [node2, node3, node4, node5].forEach(node => {
+                node.classList.add("opacity-40");
+            });
+            node2Icon.innerHTML = `<span class="material-symbols-outlined text-[18px] text-silver-sage">search</span>`;
+            node2Icon.className = "w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg";
+            node2Desc.textContent = "Pending curation pipeline start...";
+            node2Desc.className = "text-xs text-silver-sage";
+
+            node3Icon.innerHTML = `<span class="material-symbols-outlined text-[18px] text-silver-sage">route</span>`;
+            node3Icon.className = "w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg";
+            node3Desc.textContent = "Waiting for destination choices...";
+            node3Desc.className = "text-xs text-silver-sage";
+
+            node4Icon.innerHTML = `<span class="material-symbols-outlined text-[18px] text-silver-sage">payments</span>`;
+            node4Icon.className = "w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg";
+            node4Desc.textContent = "Waiting for itinerary schedule...";
+            node4Desc.className = "text-xs text-silver-sage";
+
+            node5Icon.innerHTML = `<span class="material-symbols-outlined text-[18px] text-silver-sage">fact_check</span>`;
+            node5Icon.className = "w-10 h-10 rounded-full bg-slate-glass border border-glass-border flex items-center justify-center z-10 shadow-lg";
+            node5Desc.textContent = "Final verification checks...";
+            node5Desc.className = "text-xs text-silver-sage";
+
+            feedStatusTitle.textContent = "System Ready";
+            feedStatusTitle.className = "text-xs font-semibold text-primary uppercase";
+            feedAddrCode.textContent = "SEC-200 // OK";
+            feedStatusDesc.textContent = "Constraints loaded. Review extracted values and click 'Generate Itinerary' to start generation.";
+            feedSpinnerContainer.innerHTML = `<span class="material-symbols-outlined text-primary text-2xl animate-pulse">check_circle</span>`;
+        }
+
+        // Action: Generate Plan E2E & Animate Pipeline
+        async function handleGenerateItinerary() {
+            btnGenerate.disabled = true;
+            btnEditorBack.disabled = true;
+
+            // Package final tags payload
+            const packagedPayload = {
+                prompt: null,
+                constraints: appState.parsedConstraints
+            };
+
+            // Start API Request in the background
+            let apiPromise = fetch(API_BASE_URL + "/api/plan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(packagedPayload)
+            });
+
+            // Start loading animation simulation
+            try {
+                await runPipelineAnimation();
+                
+                // Wait for the API call to complete
+                const response = await apiPromise;
+                if (!response.ok) {
+                    throw new Error("Plan generation failed");
+                }
+                const plan = await response.json();
+                if (!plan.days || plan.days.length === 0) {
+                    throw new Error("Empty itinerary plan returned from backend due to agent error");
+                }
+                appState.generatedItinerary = plan;
+                updateNavbar();
+                renderBudgetDashboard(plan);
+                
+                // Transition to Screen 3 dashboard
+                showScreen("dashboard");
+                renderDashboard(plan);
+                
+                // Check if validation passed
+                if (plan.validation_passed === false) {
+                    showModalAlert("Consistency Warning", "Review Agent flagged some constraint issues: " + (plan.validation_notes || "Budget category limits or backtracking detected.") + " We have rendered the plan, but check warnings.", "warning");
+                }
+                
+            } catch (err) {
+                console.warn("Pipeline integration failed or E2E mock. Falling back to dummy itinerary payload.", err);
+                showModalAlert("Planner Server Offline", "Could not connect to the multi-agent generation pipeline. The application will continue in offline simulation mode using standard mock structures.", "warning");
+                const mockPlan = getMockPlan(appState.parsedConstraints);
+                appState.generatedItinerary = mockPlan;
+                updateNavbar();
+                renderBudgetDashboard(mockPlan);
+                showScreen("dashboard");
+                renderDashboard(mockPlan);
+            } finally {
+                btnGenerate.disabled = false;
+                btnEditorBack.disabled = false;
+            }
+        }
+
+        // Helper: Pipeline Animation Loop
+        async function runPipelineAnimation() {
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+            // Set live status card spinner
+            feedSpinnerContainer.innerHTML = `<div class="w-7 h-7 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>`;
+
+            // Node 2 (Research) Active
+            node2.classList.remove("opacity-40");
+            node2Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian pulse-gold z-10 flex items-center justify-center";
+            node2Icon.innerHTML = "";
+            node2Desc.textContent = "Curating crowd-avoidant sights and restaurants...";
+            node2Desc.className = "text-xs text-primary animate-pulse";
+            feedStatusTitle.textContent = "Destination Agent Curation";
+            feedAddrCode.textContent = "SEC-301 // ACTIVE";
+            feedStatusDesc.innerHTML = `Curating quiet locations in <span class="text-primary font-bold">${appState.parsedConstraints.destination}</span> matching preferences: "${appState.parsedConstraints.preferences.join(', ')}"...`;
+            
+            await sleep(1500);
+
+            // Node 2 (Research) Done, Node 3 (Logistics) Active
+            node2Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian flex items-center justify-center z-10 shadow-lg";
+            node2Icon.innerHTML = `<span class="material-symbols-outlined text-[14px] text-frost-white font-bold">check</span>`;
+            node2Desc.textContent = " Curation complete. Found 8 optimal locations.";
+            node2Desc.className = "text-xs text-emerald";
+
+            node3.classList.remove("opacity-40");
+            node3Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian pulse-gold z-10 flex items-center justify-center";
+            node3Icon.innerHTML = "";
+            node3Desc.textContent = "Arranging day itineraries and computing transit paths...";
+            node3Desc.className = "text-xs text-primary animate-pulse";
+            feedStatusTitle.textContent = "Logistics Agent Sequencing";
+            feedAddrCode.textContent = "SEC-302 // ACTIVE";
+            feedStatusDesc.innerHTML = `Sequencing activities for <span class="text-primary font-bold">${appState.parsedConstraints.duration_days} Days</span> while grouping by neighborhoods...`;
+
+            await sleep(1500);
+
+            // Node 3 (Logistics) Done, Node 4 (Budget) Active
+            node3Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian flex items-center justify-center z-10 shadow-lg";
+            node3Icon.innerHTML = `<span class="material-symbols-outlined text-[14px] text-frost-white font-bold">check</span>`;
+            node3Desc.textContent = "Sequencing complete. Geographical backtracking minimized.";
+            node3Desc.className = "text-xs text-emerald";
+
+            node4.classList.remove("opacity-40");
+            node4Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian pulse-gold z-10 flex items-center justify-center";
+            node4Icon.innerHTML = "";
+            node4Desc.textContent = "Estimating accommodation, meals, and buffer splits...";
+            node4Desc.className = "text-xs text-primary animate-pulse";
+            feedStatusTitle.textContent = "Budget Cost Modeling";
+            feedAddrCode.textContent = "SEC-303 // ACTIVE";
+            feedStatusDesc.innerHTML = `Distributing estimated costs across categories. Target ceiling: <span class="text-secondary font-bold">$${appState.parsedConstraints.budget_usd}</span>...`;
+
+            await sleep(1500);
+
+            // Node 4 (Budget) Done, Node 5 (Review) Active
+            node4Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian flex items-center justify-center z-10 shadow-lg";
+            node4Icon.innerHTML = `<span class="material-symbols-outlined text-[14px] text-frost-white font-bold">check</span>`;
+            node4Desc.textContent = "Cost modeling complete. Total estimate fits within budget limit.";
+            node4Desc.className = "text-xs text-emerald";
+
+            node5.classList.remove("opacity-40");
+            node5Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian pulse-gold z-10 flex items-center justify-center";
+            node5Icon.innerHTML = "";
+            node5Desc.textContent = "Validating constraints and geographical consistency...";
+            node5Desc.className = "text-xs text-primary animate-pulse";
+            feedStatusTitle.textContent = "Consistency Review Gate";
+            feedAddrCode.textContent = "SEC-304 // ACTIVE";
+            feedStatusDesc.textContent = "Review Agent is performing final checks on itinerary duration, city coverage, and crowd density rules...";
+
+            await sleep(1500);
+
+            // Node 5 Done, System Pass
+            node5Icon.className = "w-10 h-10 rounded-full bg-primary border-4 border-obsidian flex items-center justify-center z-10 shadow-lg";
+            node5Icon.innerHTML = `<span class="material-symbols-outlined text-[14px] text-frost-white font-bold">check</span>`;
+            node5Desc.textContent = "Review checks passed successfully.";
+            node5Desc.className = "text-xs text-emerald";
+
+            feedStatusTitle.textContent = "Itinerary Generated";
+            feedStatusTitle.className = "text-xs font-semibold text-emerald uppercase";
+            feedAddrCode.textContent = "SEC-200 // PASS";
+            feedStatusDesc.textContent = "Itinerary successfully parsed, sequenced, cost-modeled, and passed quality reviews.";
+            feedSpinnerContainer.innerHTML = `<span class="material-symbols-outlined text-emerald-400 text-2xl">check_circle</span>`;
+        }
+
+        // Mock Fallback Itinerary Plan Generator
+        function getMockPlan(constraints) {
+            const days = [];
+            const cities = constraints.cities && constraints.cities.length > 0 ? constraints.cities : [constraints.destination];
+            
+            for (let i = 1; i <= constraints.duration_days; i++) {
+                const city = cities[(i - 1) % cities.length];
+                days.push({
+                    day_number: i,
+                    title: `Discovering ${city} - Highlights & Culture`,
+                    activities: [
+                        {
+                            name: `Scenic walk around historic ${city}`,
+                            type: "sightseeing",
+                            time_slot: "Morning",
+                            cost_usd: 0,
+                            duration_hours: 2,
+                            crowd_level: "low",
+                            description: `Enjoy a refreshing stroll in a quiet neighborhood of ${city}.`
+                        },
+                        {
+                            name: `${city} Traditional Lunch`,
+                            type: "food",
+                            time_slot: "Afternoon",
+                            cost_usd: 25,
+                            duration_hours: 1.5,
+                            crowd_level: "medium",
+                            description: "Taste local specialties prepared by master chefs."
+                        },
+                        {
+                            name: `Guided cultural visit in ${city}`,
+                            type: "sightseeing",
+                            time_slot: "Afternoon",
+                            cost_usd: 30,
+                            duration_hours: 3,
+                            crowd_level: "medium",
+                            description: "Deep dive into the heritage and history of the location."
+                        },
+                        {
+                            name: `Evening Dinner at a cozy tavern`,
+                            type: "food",
+                            time_slot: "Evening",
+                            cost_usd: 45,
+                            duration_hours: 2,
+                            crowd_level: "low",
+                            description: "A relaxing dining experience to unwind."
+                        }
+                    ],
+                    transit_info: "Public transit & walking"
+                });
+            }
+            
+            return {
+                destination: constraints.destination,
+                duration_days: constraints.duration_days,
+                days: days,
+                budget_summary: [
+                    { category: "flights", allocated_usd: constraints.budget_usd * 0.25, estimated_cost_usd: constraints.budget_usd * 0.23, status: "Within" },
+                    { category: "accommodation", allocated_usd: constraints.budget_usd * 0.35, estimated_cost_usd: constraints.budget_usd * 0.30, status: "Within" },
+                    { category: "transit", allocated_usd: constraints.budget_usd * 0.1, estimated_cost_usd: constraints.budget_usd * 0.08, status: "Within" },
+                    { category: "food", allocated_usd: constraints.budget_usd * 0.15, estimated_cost_usd: constraints.budget_usd * 0.14, status: "Within" },
+                    { category: "activities", allocated_usd: constraints.budget_usd * 0.1, estimated_cost_usd: constraints.budget_usd * 0.09, status: "Within" },
+                    { category: "buffer", allocated_usd: constraints.budget_usd * 0.05, estimated_cost_usd: constraints.budget_usd * 0.04, status: "Within" }
+                ],
+                validation_passed: true,
+                validation_notes: "Mock plan successfully generated offline."
+            };
+        }
+
+        // --- Sprint 8 Dashboard & Map Functions ---
+
+        const CITY_CENTERS = {
+            "tokyo": [35.6762, 139.6503],
+            "kyoto": [35.0116, 135.7681],
+            "rome": [41.9028, 12.4964],
+            "florence": [43.7696, 11.2558],
+            "venice": [45.4408, 12.3155],
+            "goa": [15.2993, 74.1240]
+        };
+
+        const LANDMARKS = {
+            "nezu shrine": [35.7202, 139.7621],
+            "yanaka walking trail": [35.7236, 139.7675],
+            "koenji ramen alley": [35.7053, 139.6498],
+            "tokyo tower": [35.6586, 139.7454],
+            "senso-ji": [35.7148, 139.7967],
+            "fushimi inari": [34.9671, 135.7727],
+            "kinkaku-ji": [35.0394, 135.7292],
+            "kiyomizu-dera": [34.9949, 135.7850],
+            "gion district": [34.9986, 135.7726],
+            "colosseum": [41.8902, 12.4922],
+            "vatican": [41.9060, 12.4536],
+            "trevi fountain": [41.9009, 12.4833]
+        };
+
+        function resolveActivityCoordinates(activityName, cityName, destination) {
+            const nameLower = activityName.toLowerCase();
+            const cityLower = cityName ? cityName.toLowerCase() : "";
+            const destLower = destination ? destination.toLowerCase() : "";
+            
+            // Check direct landmarks
+            for (const key in LANDMARKS) {
+                if (nameLower.includes(key)) {
+                    return LANDMARKS[key];
+                }
+            }
+            
+            // Check city centers
+            let center = CITY_CENTERS[cityLower];
+            if (!center) {
+                // Find matching center based on destination name
+                for (const key in CITY_CENTERS) {
+                    if (destLower.includes(key) || key.includes(destLower)) {
+                        center = CITY_CENTERS[key];
+                        break;
+                    }
+                }
+            }
+            
+            if (!center) {
+                center = [35.6762, 139.6503]; // Fallback to Tokyo
+            }
+            
+            // Generate deterministic offset based on hash of activity name
+            let hash = 0;
+            for (let i = 0; i < activityName.length; i++) {
+                hash = activityName.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const latOffset = ((hash % 100) / 10000) - 0.005;
+            const lngOffset = (((hash >> 8) % 100) / 10000) - 0.005;
+            
+            return [center[0] + latOffset, center[1] + lngOffset];
+        }
+
+        function updateMapForDay(day, city, destination) {
+            const activities = day.activities;
+            if (!activities || activities.length === 0) return;
+            
+            const latlngs = [];
+            
+            // Resolve coordinates for all activities of this day
+            const dayWaypoints = activities.map(act => {
+                const coords = resolveActivityCoordinates(act.name, city, destination);
+                return {
+                    name: act.name,
+                    type: act.type,
+                    coords: coords
+                };
+            });
+            
+            // Initialize map if it doesn't exist
+            if (!map) {
+                // Choose center of the first activity
+                const initialCenter = dayWaypoints[0].coords;
+                map = L.map('map', { zoomControl: false }).setView(initialCenter, 13);
+                
+                // CartoDB Dark Matter tile layer
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                }).addTo(map);
+                
+                L.control.zoom({ position: 'bottomright' }).addTo(map);
+            }
+            
+            // Clear previous markers
+            mapMarkers.forEach(marker => map.removeLayer(marker));
+            mapMarkers = [];
+            
+            // Clear previous route lines
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+            
+            const colorMap = {
+                food: "#F43F5E",
+                sightseeing: "#D97706",
+                temple: "#D97706",
+                transit: "#0D9488",
+                accommodation: "#6bd8cb"
+            };
+            
+            // Render markers
+            dayWaypoints.forEach((wp, idx) => {
+                const color = colorMap[wp.type] || "#0d9488";
+                
+                const markerHtml = `
+                    <div style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;">
+                        <div style="width: 14px; height: 14px; border-radius: 50%; background-color: ${color}; border: 2px solid #F8FAFC; box-shadow: 0 0 12px ${color};"></div>
+                    </div>
+                `;
+                
+                const customIcon = L.divIcon({
+                    html: markerHtml,
+                    className: 'custom-map-marker',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                
+                const marker = L.marker(wp.coords, { icon: customIcon })
+                    .addTo(map)
+                    .bindPopup(`<strong style="color: #0B0F19; font-family: 'Plus Jakarta Sans', sans-serif;">${idx + 1}. ${wp.name}</strong><br><span style="color: #666; font-size: 11px;">Type: ${wp.type}</span>`);
+                    
+                mapMarkers.push(marker);
+                latlngs.push(wp.coords);
+            });
+            
+            // Draw dashed route lines
+            if (latlngs.length > 1) {
+                routeLine = L.polyline(latlngs, {
+                    color: '#0D9488',
+                    dashArray: '6, 12',
+                    weight: 3,
+                    opacity: 0.8
+                }).addTo(map);
+                
+                // Zoom and center the map around all markers of the active day
+                map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            } else if (latlngs.length === 1) {
+                map.setView(latlngs[0], 14);
+            }
+        }
+
+        function renderDashboard(plan) {
+            const timelineContainer = document.getElementById("timeline-container");
+            timelineContainer.innerHTML = "";
+            
+            // Calculate total cost and budget status
+            let totalCost = 0;
+            plan.days.forEach(day => {
+                day.activities.forEach(act => {
+                    totalCost += act.cost_usd;
+                });
+            });
+            
+            // Safely parse target budget
+            const targetBudget = appState.parsedConstraints ? appState.parsedConstraints.budget_usd : 3000;
+            const remainingBudget = Math.max(0, targetBudget - totalCost);
+            const progressPercent = Math.min(100, (totalCost / targetBudget) * 100);
+            
+            // Update map summary widgets
+            document.getElementById("total-cost-val").textContent = `$${Math.round(totalCost).toLocaleString()}`;
+            document.getElementById("remaining-budget-val").textContent = `$${Math.round(remainingBudget).toLocaleString()}`;
+            document.getElementById("budget-progress-bar").style.width = `${progressPercent}%`;
+            
+            // Update verification badge
+            const badge = document.getElementById("review-status-badge");
+            if (plan.validation_passed) {
+                badge.textContent = "Passed";
+                badge.parentElement.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+            } else {
+                badge.textContent = "Overrun/Fail";
+                badge.parentElement.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400";
+            }
+            
+            // Loop through days
+            plan.days.forEach((day, index) => {
+                const isFirst = (index === 0);
+                
+                // Day accordion container
+                const dayCard = document.createElement("div");
+                dayCard.className = `glass-panel rounded-2xl border border-glass-border overflow-hidden transition-all duration-300 ${isFirst ? 'aurora-glow' : 'opacity-85 hover:opacity-100'}`;
+                dayCard.id = `day-card-${day.day_number}`;
+                
+                // Accordion Header
+                const header = document.createElement("div");
+                header.className = "p-6 cursor-pointer flex justify-between items-center select-none bg-white/5 hover:bg-white/10 transition-colors";
+                
+                // Try to find the city for this day from constraints, or fallback to destination
+                let currentCity = plan.destination;
+                if (appState.parsedConstraints && appState.parsedConstraints.cities && appState.parsedConstraints.cities.length > 0) {
+                    const cityIndex = (day.day_number - 1) % appState.parsedConstraints.cities.length;
+                    currentCity = appState.parsedConstraints.cities[cityIndex];
+                }
+                
+                header.innerHTML = `
+                    <div>
+                        <h2 class="font-headline text-lg font-bold text-frost-white">Day ${day.day_number} - ${currentCity}</h2>
+                        <p class="text-silver-sage text-xs font-light">${day.title}</p>
+                    </div>
+                    <span class="material-symbols-outlined text-silver-sage transition-transform duration-300 transform ${isFirst ? 'rotate-180' : ''}" id="chevron-day-${day.day_number}">expand_more</span>
+                `;
+                
+                // Content container
+                const content = document.createElement("div");
+                content.className = `p-6 border-t border-glass-border transition-all duration-300 ${isFirst ? 'block' : 'hidden'}`;
+                content.id = `day-content-${day.day_number}`;
+                
+                // Activity Timeline
+                const activitiesList = document.createElement("div");
+                activitiesList.className = "flex flex-col gap-8 relative pl-2";
+                
+                day.activities.forEach((act, actIdx) => {
+                    const isLastAct = (actIdx === day.activities.length - 1);
+                    
+                    // Icon matching activity type
+                    let iconName = "explore";
+                    let color = "#0D9488";
+                    let badgeClass = "bg-primary/10 text-primary border-primary/20";
+                    let typeLabel = "ACTIVITY";
+                    
+                    const lowerType = act.type.toLowerCase();
+                    if (lowerType.includes("food") || lowerType.includes("din")) {
+                        iconName = "ramen_dining";
+                        color = "#F43F5E";
+                        badgeClass = "bg-sunset-coral/10 text-sunset-coral border-sunset-coral/20";
+                        typeLabel = "FOOD";
+                    } else if (lowerType.includes("temple") || lowerType.includes("shrin")) {
+                        iconName = "temple_buddhist";
+                        color = "#D97706";
+                        badgeClass = "bg-accent-gold/10 text-accent-gold border-accent-gold/20";
+                        typeLabel = "TEMPLE";
+                    } else if (lowerType.includes("sight") || lowerType.includes("cultur") || lowerType.includes("muse")) {
+                        iconName = "explore";
+                        color = "#D97706";
+                        badgeClass = "bg-accent-gold/10 text-accent-gold border-accent-gold/20";
+                        typeLabel = "SIGHTSEEING";
+                    } else if (lowerType.includes("trans") || lowerType.includes("walk") || lowerType.includes("train") || lowerType.includes("car")) {
+                        iconName = "train";
+                        color = "#0D9488";
+                        badgeClass = "bg-primary/10 text-primary border-primary/20";
+                        typeLabel = "TRANSIT";
+                    }
+                    
+                    const actItem = document.createElement("div");
+                    actItem.className = "relative flex gap-6 items-start";
+                    actItem.innerHTML = `
+                        ${!isLastAct ? '<div class="timeline-connector"></div>' : ''}
+                        <div style="background-color: ${color};" class="w-9 h-9 rounded-full flex items-center justify-center z-10 shrink-0 shadow-lg">
+                            <span class="material-symbols-outlined text-obsidian text-sm" style="font-variation-settings: 'FILL' 1;">${iconName}</span>
+                        </div>
+                        <div class="flex flex-col gap-1.5 flex-grow">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] text-silver-sage uppercase tracking-wider font-semibold">${act.time_slot}</span>
+                                <span class="px-2 py-0.5 rounded-full border text-[9px] font-bold tracking-wider ${badgeClass}">${typeLabel}</span>
+                            </div>
+                            <h3 class="font-headline text-sm font-bold text-frost-white">${act.name}</h3>
+                            <p class="text-xs text-silver-sage font-light leading-relaxed">${act.description}</p>
+                            <div class="flex items-center gap-4 text-silver-sage/60 text-[10px] mt-1">
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">payments</span> $${act.cost_usd}</span>
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> ${act.duration_hours}h</span>
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">group</span> Crowd: ${act.crowd_level}</span>
+                            </div>
+                        </div>
+                    `;
+                    activitiesList.appendChild(actItem);
+                });
+                
+                // Add Activity Button for the day
+                const addActBtn = document.createElement("div");
+                addActBtn.className = "mt-6 p-4 glass-panel rounded-xl border-dashed border-primary/20 flex items-center justify-center gap-2 group cursor-pointer hover:border-primary/50 transition-all text-xs font-semibold";
+                addActBtn.innerHTML = `
+                    <span class="material-symbols-outlined text-primary group-hover:rotate-90 transition-transform text-sm">add</span>
+                    <span class="text-primary">Add Activity for Day ${day.day_number}</span>
+                `;
+                addActBtn.addEventListener("click", () => {
+                    const newActName = prompt("Enter the activity name:");
+                    if (newActName && newActName.trim()) {
+                        const newAct = {
+                            name: newActName.trim(),
+                            type: "sightseeing",
+                            time_slot: "Afternoon",
+                            cost_usd: 15,
+                            duration_hours: 2,
+                            crowd_level: "medium",
+                            description: "Custom activity manually added to the itinerary."
+                        };
+                        day.activities.push(newAct);
+                        
+                        // Re-render everything
+                        renderDashboard(appState.generatedItinerary);
+                        renderBudgetDashboard(appState.generatedItinerary);
+                    }
+                });
+                
+                content.appendChild(activitiesList);
+                content.appendChild(addActBtn);
+                dayCard.appendChild(header);
+                dayCard.appendChild(content);
+                
+                // Header Click Event Listener
+                header.addEventListener("click", () => {
+                    const isExpanded = !content.classList.contains("hidden");
+                    
+                    // Collapse all days
+                    document.querySelectorAll("[id^='day-content-']").forEach(el => el.className = "p-6 border-t border-glass-border transition-all duration-300 hidden");
+                    document.querySelectorAll("[id^='chevron-day-']").forEach(el => el.classList.remove("rotate-180"));
+                    document.querySelectorAll("[id^='day-card-']").forEach(el => el.classList.remove("aurora-glow"));
+                    
+                    if (!isExpanded) {
+                        // Expand clicked day
+                        content.className = "p-6 border-t border-glass-border transition-all duration-300 block";
+                        document.getElementById(`chevron-day-${day.day_number}`).classList.add("rotate-180");
+                        dayCard.classList.add("aurora-glow");
+                        
+                        // Update Leaflet map for this day
+                        updateMapForDay(day, currentCity, plan.destination);
+                    }
+                });
+                
+                timelineContainer.appendChild(dayCard);
+            });
+            
+            // Initial map display for Day 1
+            if (plan.days.length > 0) {
+                let firstCity = plan.destination;
+                if (appState.parsedConstraints && appState.parsedConstraints.cities && appState.parsedConstraints.cities.length > 0) {
+                    firstCity = appState.parsedConstraints.cities[0];
+                }
+                updateMapForDay(plan.days[0], firstCity, plan.destination);
+            }
+        }
+
+        function renderBudgetDashboard(plan) {
+            if (!plan || !plan.budget_summary) return;
+
+            // 1. Calculate total estimated cost
+            let totalSpent = 0;
+            plan.days.forEach(day => {
+                day.activities.forEach(act => {
+                    totalSpent += act.cost_usd;
+                });
+            });
+
+            // Target budget from active constraints
+            const targetBudget = appState.parsedConstraints ? appState.parsedConstraints.budget_usd : 3000;
+            const remainingBudget = Math.max(0, targetBudget - totalSpent);
+            const progressPercent = Math.min(100, (totalSpent / targetBudget) * 100);
+
+            // 2. Circular Gauge
+            const circularGauge = document.getElementById("circular-svg-gauge");
+            if (circularGauge) {
+                const offset = 251.2 - (251.2 * progressPercent / 100);
+                circularGauge.style.strokeDashoffset = offset;
+            }
+            
+            const spentVal = document.getElementById("gauge-spent-val");
+            if (spentVal) spentVal.textContent = `$${Math.round(totalSpent).toLocaleString()}`;
+            
+            const totalVal = document.getElementById("gauge-total-val");
+            if (totalVal) totalVal.textContent = `$${Math.round(targetBudget).toLocaleString()} total`;
+
+            const underOverVal = document.getElementById("gauge-under-over-val");
+            if (underOverVal) {
+                if (totalSpent <= targetBudget) {
+                    underOverVal.className = "text-emerald-400 flex items-center justify-center gap-2 font-semibold";
+                    underOverVal.innerHTML = `<span class="material-symbols-outlined text-[18px]">trending_down</span> Under budget`;
+                } else {
+                    underOverVal.className = "text-rose-400 flex items-center justify-center gap-2 font-semibold";
+                    underOverVal.innerHTML = `<span class="material-symbols-outlined text-[18px]">trending_up</span> Over budget`;
+                }
+            }
+
+            const percentVal = document.getElementById("gauge-percent-val");
+            if (percentVal) percentVal.textContent = `${Math.round(progressPercent)}% consumed`;
+
+            // 3. Cost Forecast Sparkline Chart
+            const sparklineBars = document.getElementById("sparkline-bars");
+            const forecastEndDay = document.getElementById("forecast-end-day");
+            if (sparklineBars) {
+                sparklineBars.innerHTML = "";
+                const dailyCosts = plan.days.map(day => {
+                    let cost = 0;
+                    day.activities.forEach(act => {
+                        cost += act.cost_usd;
+                    });
+                    return { dayNum: day.day_number, cost: cost };
+                });
+
+                const maxDailyCost = Math.max(...dailyCosts.map(d => d.cost), 1);
+
+                dailyCosts.forEach(d => {
+                    const heightPercent = Math.max(10, Math.min(100, (d.cost / maxDailyCost) * 100));
+                    const bar = document.createElement("div");
+                    bar.className = "flex-grow bg-primary/20 hover:bg-primary/50 transition-colors rounded-t cursor-pointer group relative";
+                    bar.style.height = `${heightPercent}%`;
+                    bar.innerHTML = `
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 border border-glass-border text-[10px] text-frost-white rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                            Day ${d.dayNum}: $${Math.round(d.cost).toLocaleString()}
+                        </div>
+                    `;
+                    sparklineBars.appendChild(bar);
+                });
+            }
+            if (forecastEndDay && plan.days.length > 0) {
+                forecastEndDay.textContent = `Day ${plan.days.length}`;
+            }
+
+            // 4. Update What-If Slider values
+            const whatifSlider = document.getElementById("whatif-slider");
+            const whatifBudgetVal = document.getElementById("whatif-budget-val");
+            if (whatifSlider) {
+                whatifSlider.value = targetBudget;
+            }
+            if (whatifBudgetVal) {
+                whatifBudgetVal.textContent = `$${Math.round(targetBudget).toLocaleString()}`;
+            }
+
+            // 5. Allocation Breakdown Cards
+            const categoryGrid = document.getElementById("budget-category-grid");
+            if (categoryGrid) {
+                categoryGrid.innerHTML = "";
+                const meta = {
+                    flights: { name: "Flights & Travel", icon: "flight", colorClass: "text-primary bg-primary/10 border-primary/20", progressColor: "bg-primary" },
+                    accommodation: { name: "Accommodation", icon: "hotel", colorClass: "text-accent-gold bg-accent-gold/10 border-accent-gold/20", progressColor: "bg-accent-gold" },
+                    transit: { name: "Local Transit", icon: "train", colorClass: "text-primary bg-primary/10 border-primary/20", progressColor: "bg-primary" },
+                    food: { name: "Dining & Food", icon: "restaurant", colorClass: "text-secondary bg-secondary/10 border-secondary/20", progressColor: "bg-secondary" },
+                    activities: { name: "Activities", icon: "explore", colorClass: "text-accent-gold bg-accent-gold/10 border-accent-gold/20", progressColor: "bg-accent-gold" },
+                    buffer: { name: "Buffer / Emergency", icon: "shield", colorClass: "text-silver-sage bg-silver-sage/10 border-silver-sage/20", progressColor: "bg-silver-sage" }
+                };
+
+                plan.budget_summary.forEach(breakdown => {
+                    const catKey = breakdown.category.toLowerCase();
+                    const info = meta[catKey] || { name: breakdown.category, icon: "payments", colorClass: "text-primary bg-primary/10 border-primary/20", progressColor: "bg-primary" };
+                    const allocated = breakdown.allocated_usd;
+                    const estimated = breakdown.estimated_cost_usd;
+                    const pct = allocated > 0 ? Math.min(100, (estimated / allocated) * 100) : 0;
+                    const statusClass = breakdown.status === "Within" 
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                        : "bg-rose-500/10 text-rose-400 border-rose-500/20";
+                    
+                    const card = document.createElement("div");
+                    card.className = "glass-panel rounded-2xl p-6 flex flex-col justify-between space-y-4 hover:border-white/10 transition-all";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-xl border ${info.colorClass}">
+                                    <span class="material-symbols-outlined text-[18px]">${info.icon}</span>
+                                </div>
+                                <h4 class="font-headline text-sm font-bold text-frost-white">${info.name}</h4>
+                            </div>
+                            <span class="px-2 py-0.5 rounded border text-[9px] font-bold tracking-wider ${statusClass}">${breakdown.status.toUpperCase()}</span>
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[10px] text-silver-sage">
+                                <span>Estimated</span>
+                                <span class="font-bold text-frost-white">$${Math.round(estimated)}</span>
+                            </div>
+                            <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full ${info.progressColor} rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] text-silver-sage/50">
+                                <span>Allocated: $${Math.round(allocated)}</span>
+                                <span>${Math.round(pct)}%</span>
+                            </div>
+                        </div>
+                    `;
+                    categoryGrid.appendChild(card);
+                });
+            }
+        }
+
+        // Listeners: Suggested prompt chips
+        chips.forEach(chip => {
+            chip.addEventListener("click", () => {
+                const promptText = chip.getAttribute("data-prompt");
+                promptInput.value = promptText;
+                promptInput.focus();
+            });
+        });
+
+        // Listeners: Budget slider
+        budgetSlider.addEventListener("input", (e) => {
+            const val = parseInt(e.target.value);
+            budgetVal.textContent = `$${val.toLocaleString()}`;
+            if (appState.parsedConstraints) {
+                appState.parsedConstraints.budget_usd = val;
+            }
+        });
+
+        // Listeners: Stepper duration handlers
+        btnDurationMinus.addEventListener("click", () => {
+            if (appState.parsedConstraints && appState.parsedConstraints.duration_days > 1) {
+                appState.parsedConstraints.duration_days--;
+                durationVal.textContent = `${appState.parsedConstraints.duration_days} Days`;
+            }
+        });
+        btnDurationPlus.addEventListener("click", () => {
+            if (appState.parsedConstraints && appState.parsedConstraints.duration_days < 30) {
+                appState.parsedConstraints.duration_days++;
+                durationVal.textContent = `${appState.parsedConstraints.duration_days} Days`;
+            }
+        });
+
+        // Listeners: Add City Tag placeholder
+        btnAddCity.addEventListener("click", () => {
+            const newCity = prompt("Enter a city name to add:");
+            if (newCity && newCity.trim()) {
+                const cleanCity = newCity.trim();
+                appState.parsedConstraints.cities.push(cleanCity);
+                
+                const span = document.createElement("span");
+                span.className = "city-tag flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm border border-primary/20 font-medium";
+                span.innerHTML = `${cleanCity} <button class="material-symbols-outlined text-[16px] hover:text-secondary self-center flex items-center justify-center">close</button>`;
+                
+                span.querySelector("button").addEventListener("click", () => {
+                    span.remove();
+                    appState.parsedConstraints.cities = appState.parsedConstraints.cities.filter(c => c !== cleanCity);
+                });
+                
+                citiesContainer.insertBefore(span, btnAddCity);
+            }
+        });
+
+        // Co-Pilot Drawer Navigation and Functions
+        function toggleCopilotDrawer(isOpen) {
+            const drawer = document.getElementById("copilot-drawer");
+            if (isOpen) {
+                drawer.classList.remove("translate-x-full");
+                drawer.classList.add("translate-x-0");
+            } else {
+                drawer.classList.remove("translate-x-0");
+                drawer.classList.add("translate-x-full");
+            }
+        }
+
+        function appendChatMessage(sender, text) {
+            const chatHistory = document.getElementById("copilot-chat-history");
+            if (!chatHistory) return;
+            const div = document.createElement("div");
+            div.className = "flex flex-col space-y-2 animate-fade-in";
+            
+            if (sender === "user") {
+                div.className += " items-end";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-silver-sage font-bold uppercase tracking-wider">You</span>
+                    </div>
+                    <div class="max-w-[90%] bg-white/5 border border-glass-border p-4 rounded-2xl rounded-tr-none text-xs text-frost-white leading-relaxed">
+                        ${text}
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary">
+                            <span class="material-symbols-outlined text-[10px]">auto_awesome</span>
+                        </div>
+                        <span class="text-[10px] text-primary font-bold uppercase tracking-wider">Co-Pilot</span>
+                    </div>
+                    <div class="max-w-[90%] bg-primary/5 border border-primary/20 p-4 rounded-2xl rounded-tl-none text-xs text-on-surface leading-relaxed">
+                        ${text}
+                    </div>
+                `;
+            }
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatHistory = document.getElementById("copilot-chat-history");
+            if (!chatHistory) return;
+            const div = document.createElement("div");
+            div.id = "copilot-typing-indicator";
+            div.className = "flex flex-col space-y-2 animate-fade-in";
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary">
+                        <span class="material-symbols-outlined text-[10px]">auto_awesome</span>
+                    </div>
+                    <span class="text-[10px] text-primary font-bold uppercase tracking-wider">Co-Pilot</span>
+                </div>
+                <div class="max-w-[90%] bg-primary/5 border border-primary/20 p-4 rounded-2xl rounded-tl-none text-xs text-on-surface leading-relaxed flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                    <span class="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                    <span class="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                </div>
+            `;
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById("copilot-typing-indicator");
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function computePlanDiff(oldPlan, newPlan) {
+            const changes = [];
+            const oldActivities = {};
+            const newActivities = {};
+
+            if (oldPlan && oldPlan.days) {
+                oldPlan.days.forEach(day => {
+                    oldActivities[day.day_number] = day.activities.map(a => a.name);
+                });
+            }
+
+            if (newPlan && newPlan.days) {
+                newPlan.days.forEach(day => {
+                    newActivities[day.day_number] = day.activities.map(a => a.name);
+                });
+            }
+
+            const allDays = new Set([...Object.keys(oldActivities), ...Object.keys(newActivities)]);
+
+            allDays.forEach(dayStr => {
+                const dayNum = parseInt(dayStr);
+                const oldActs = oldActivities[dayNum] || [];
+                const newActs = newActivities[dayNum] || [];
+
+                oldActs.forEach(name => {
+                    if (!newActs.includes(name)) {
+                        changes.push({ type: "remove", day: dayNum, name: name });
+                    }
+                });
+
+                newActs.forEach(name => {
+                    if (!oldActs.includes(name)) {
+                        changes.push({ type: "add", day: dayNum, name: name });
+                    }
+                });
+            });
+
+            return changes;
+        }
+
+        async function sendRefinementRequest(instruction) {
+            if (!instruction || !instruction.trim()) return;
+
+            toggleCopilotDrawer(true);
+
+            const chatInput = document.getElementById("copilot-chat-input");
+            const btnSendChat = document.getElementById("btn-send-chat");
+            const whatifSlider = document.getElementById("whatif-slider");
+
+            chatInput.disabled = true;
+            btnSendChat.disabled = true;
+            if (whatifSlider) whatifSlider.disabled = true;
+
+            appendChatMessage("user", instruction);
+            showTypingIndicator();
+
+            try {
+                const response = await fetch(API_BASE_URL + "/api/refine", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        existing_plan: appState.generatedItinerary,
+                        instructions: instruction
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Refinement request failed");
+                }
+
+                const newPlan = await response.json();
+                appState.proposedItinerary = newPlan;
+
+                removeTypingIndicator();
+                appendChatMessage("copilot", newPlan.validation_notes || "I have refined the itinerary based on your feedback.");
+
+                // Show alert if refinement fails validation checks
+                if (newPlan.validation_passed === false) {
+                    showModalAlert("Refinement Warning", "The Review Agent flagged some issues with this refinement: " + (newPlan.validation_notes || "Constraint limits exceeded.") + ". Please verify before applying.", "warning");
+                }
+
+                const diff = computePlanDiff(appState.generatedItinerary, newPlan);
+                const diffList = document.getElementById("copilot-diff-list");
+                diffList.innerHTML = "";
+
+                if (diff.length > 0) {
+                    diff.forEach(change => {
+                        const item = document.createElement("div");
+                        if (change.type === "remove") {
+                            item.className = "flex items-center gap-2 text-rose-400/80 line-through";
+                            item.innerHTML = `
+                                <span class="material-symbols-outlined text-sm shrink-0">remove_circle</span>
+                                <span>Day ${change.day}: ${change.name}</span>
+                            `;
+                        } else {
+                            item.className = "flex items-center gap-2 text-emerald-400";
+                            item.innerHTML = `
+                                <span class="material-symbols-outlined text-sm shrink-0">add_circle</span>
+                                <span>Day ${change.day}: ${change.name} (Added)</span>
+                            `;
+                        }
+                        diffList.appendChild(item);
+                    });
+                } else {
+                    const item = document.createElement("div");
+                    item.className = "text-silver-sage/60 italic text-center py-2";
+                    item.textContent = "No additions or removals to display.";
+                    diffList.appendChild(item);
+                }
+
+                document.getElementById("copilot-diff-card-container").classList.remove("hidden");
+
+            } catch (err) {
+                console.warn("Refinement failed. Falling back to offline client-side simulation.", err);
+                removeTypingIndicator();
+                showModalAlert("Refinement Service Offline", "Could not connect to the Traveller backend. The refinement will continue in offline simulation mode using standard mock structures.", "warning");
+
+                // Mock refinement
+                const mockNewPlan = JSON.parse(JSON.stringify(appState.generatedItinerary));
+                let changed = false;
+
+                if (mockNewPlan.days && mockNewPlan.days.length > 0) {
+                    const day = mockNewPlan.days[0];
+                    if (day.activities && day.activities.length > 0) {
+                        const removed = day.activities.pop();
+                        const isBudgetReduction = instruction.toLowerCase().includes("budget") || instruction.toLowerCase().includes("cost") || instruction.toLowerCase().includes("reduce");
+                        const newAct = {
+                            name: isBudgetReduction ? "Cozy Local Tea House Visit" : "Co-Pilot Discovery activity",
+                            type: "food",
+                            time_slot: "Evening",
+                            cost_usd: isBudgetReduction ? 8 : 22,
+                            duration_hours: 1,
+                            crowd_level: "low",
+                            description: "Budget-conscious refinement recommended by the Co-Pilot."
+                        };
+                        day.activities.push(newAct);
+
+                        if (mockNewPlan.budget_summary) {
+                            mockNewPlan.budget_summary.forEach(item => {
+                                if (item.category === "food") {
+                                    item.estimated_cost_usd = Math.max(10, item.estimated_cost_usd - removed.cost_usd + newAct.cost_usd);
+                                }
+                            });
+                        }
+                        changed = true;
+                    }
+                }
+
+                if (changed) {
+                    appState.proposedItinerary = mockNewPlan;
+                    appendChatMessage("copilot", `I've adjusted your plan to align with constraints: "${instruction}". Check the proposed differences below.`);
+                    
+                    const diff = computePlanDiff(appState.generatedItinerary, mockNewPlan);
+                    const diffList = document.getElementById("copilot-diff-list");
+                    diffList.innerHTML = "";
+
+                    diff.forEach(change => {
+                        const item = document.createElement("div");
+                        if (change.type === "remove") {
+                            item.className = "flex items-center gap-2 text-rose-400/80 line-through";
+                            item.innerHTML = `
+                                <span class="material-symbols-outlined text-sm shrink-0">remove_circle</span>
+                                <span>Day ${change.day}: ${change.name}</span>
+                            `;
+                        } else {
+                            item.className = "flex items-center gap-2 text-emerald-400";
+                            item.innerHTML = `
+                                <span class="material-symbols-outlined text-sm shrink-0">add_circle</span>
+                                <span>Day ${change.day}: ${change.name} (Added)</span>
+                            `;
+                        }
+                        diffList.appendChild(item);
+                    });
+
+                    document.getElementById("copilot-diff-card-container").classList.remove("hidden");
+                } else {
+                    appendChatMessage("copilot", "No changes could be simulation-mapped for this instruction.");
+                }
+            } finally {
+                chatInput.disabled = false;
+                btnSendChat.disabled = false;
+                if (whatifSlider) whatifSlider.disabled = false;
+                chatInput.value = "";
+                chatInput.focus();
+            }
+        }
+
+        // Multiplayer mock pointers loops
+        function startMultiplayerPresence() {
+            const cursorPriya = document.getElementById("mock-cursor-priya");
+            const cursorSam = document.getElementById("mock-cursor-sam");
+            const collabStatusText = document.getElementById("collab-status-text");
+
+            setInterval(() => {
+                if (cursorPriya && !cursorPriya.classList.contains("hidden")) {
+                    const l = Math.floor(Math.random() * 70) + 15;
+                    const t = Math.floor(Math.random() * 70) + 15;
+                    cursorPriya.style.left = `${l}%`;
+                    cursorPriya.style.top = `${t}%`;
+                }
+                if (cursorSam && !cursorSam.classList.contains("hidden")) {
+                    const l = Math.floor(Math.random() * 70) + 15;
+                    const t = Math.floor(Math.random() * 70) + 15;
+                    cursorSam.style.left = `${l}%`;
+                    cursorSam.style.top = `${t}%`;
+                }
+            }, 3500);
+
+            const statuses = [
+                "Priya and Sam are editing...",
+                "Priya is viewing the map viewport...",
+                "Sam is adjusting the optimization slider...",
+                "Priya is online and typing...",
+                "Sam and Priya are active in the session"
+            ];
+            let idx = 0;
+            setInterval(() => {
+                if (appState.generatedItinerary && collabStatusText) {
+                    idx = (idx + 1) % statuses.length;
+                    collabStatusText.textContent = statuses[idx];
+                }
+            }, 7000);
+        }
+
+        // Listeners: Submit & Navigation
+        btnOrchestrate.addEventListener("click", handleOrchestrate);
+        btnEditorBack.addEventListener("click", () => {
+            showScreen("landing");
+        });
+        btnGenerate.addEventListener("click", handleGenerateItinerary);
+        btnSuccessBack.addEventListener("click", () => {
+            showScreen("landing");
+        });
+
+        // Brand logo navigates home
+        const logo = document.getElementById("logo-container");
+        if (logo) {
+            logo.addEventListener("click", () => {
+                showScreen("landing");
+            });
+        }
+
+        // Dashboard Actions
+        document.getElementById("btn-export-pdf").addEventListener("click", () => {
+            alert("Exporting PDF feature coming soon!");
+        });
+        document.getElementById("btn-add-calendar").addEventListener("click", () => {
+            alert("Syncing with Google Calendar feature coming soon!");
+        });
+        document.getElementById("btn-share-plan").addEventListener("click", () => {
+            alert("Sharing plan feature coming soon!");
+        });
+
+        // Screen 4 & 5 specific listeners
+        document.getElementById("nav-explore").addEventListener("click", (e) => {
+            e.preventDefault();
+            showScreen("landing");
+        });
+
+        document.getElementById("nav-itineraries").addEventListener("click", (e) => {
+            e.preventDefault();
+            if (appState.generatedItinerary) {
+                showScreen("dashboard");
+            }
+        });
+
+        document.getElementById("nav-insights").addEventListener("click", (e) => {
+            e.preventDefault();
+            if (appState.generatedItinerary) {
+                showScreen("budget");
+                renderBudgetDashboard(appState.generatedItinerary);
+            }
+        });
+
+        document.getElementById("btn-open-copilot").addEventListener("click", () => {
+            toggleCopilotDrawer(true);
+        });
+
+        document.getElementById("btn-close-copilot").addEventListener("click", () => {
+            toggleCopilotDrawer(false);
+        });
+
+        const chatInput = document.getElementById("copilot-chat-input");
+        const btnSendChat = document.getElementById("btn-send-chat");
+
+        btnSendChat.addEventListener("click", () => {
+            const val = chatInput.value.trim();
+            if (val) sendRefinementRequest(val);
+        });
+
+        chatInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                const val = chatInput.value.trim();
+                if (val) sendRefinementRequest(val);
+            }
+        });
+
+        document.getElementById("btn-apply-changes").addEventListener("click", () => {
+            if (appState.proposedItinerary) {
+                appState.generatedItinerary = appState.proposedItinerary;
+                appState.proposedItinerary = null;
+                document.getElementById("copilot-diff-card-container").classList.add("hidden");
+                renderDashboard(appState.generatedItinerary);
+                renderBudgetDashboard(appState.generatedItinerary);
+                appendChatMessage("copilot", "Applied changes! Dashboard updated in real-time.");
+            }
+        });
+
+        const whatifSlider = document.getElementById("whatif-slider");
+        const whatifBudgetVal = document.getElementById("whatif-budget-val");
+        if (whatifSlider) {
+            whatifSlider.addEventListener("input", (e) => {
+                if (whatifBudgetVal) {
+                    whatifBudgetVal.textContent = `$${parseInt(e.target.value).toLocaleString()}`;
+                }
+            });
+            whatifSlider.addEventListener("change", (e) => {
+                const targetVal = e.target.value;
+                sendRefinementRequest(`Optimize the budget to fit a target ceiling of $${targetVal}. Reduce activity costs where possible.`);
+            });
+        }
+
+        const btnBudgetBook = document.getElementById("btn-budget-book");
+        if (btnBudgetBook) {
+            btnBudgetBook.addEventListener("click", () => {
+                alert("Booking complete! Itinerary locked in.");
+            });
+        }
+
+        // Start multiplayer presence
+        startMultiplayerPresence();
+    </script>
+</body>
+</html>

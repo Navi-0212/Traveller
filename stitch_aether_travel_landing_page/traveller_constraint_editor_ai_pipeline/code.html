@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TRAVELLER | Constraint Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Outfit:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .aurora-glow {
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.15);
+        }
+        .pulse-gold {
+            animation: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-gold {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px rgba(255, 180, 0, 0.6)); }
+            50% { opacity: .7; filter: drop-shadow(0 0 2px rgba(255, 180, 0, 0.2)); }
+        }
+        .node-line {
+            background: linear-gradient(to bottom, #0D9488, rgba(255, 255, 255, 0.1));
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #F43F5E;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#29a195",
+                      "surface-container-highest": "#313540",
+                      "on-tertiary-container": "#5b0017",
+                      "surface-variant": "#313540",
+                      "on-secondary-fixed-variant": "#005236",
+                      "secondary-container": "#00a572",
+                      "secondary": "#4edea3",
+                      "surface-bright": "#353944",
+                      "on-tertiary-fixed": "#40000d",
+                      "on-primary-container": "#00302b",
+                      "inverse-on-surface": "#2c303b",
+                      "emerald": "#10B981",
+                      "background": "#0f131d",
+                      "on-surface": "#dfe2f1",
+                      "surface-container-lowest": "#0a0e18",
+                      "silver-sage": "#94A3B8",
+                      "on-tertiary-fixed-variant": "#92002a",
+                      "on-primary-fixed": "#00201d",
+                      "error": "#ffb4ab",
+                      "deep-indigo": "#312E81",
+                      "surface-container-low": "#171b26",
+                      "on-primary": "#003732",
+                      "sunset-coral": "#F43F5E",
+                      "glass-border": "rgba(255, 255, 255, 0.08)",
+                      "obsidian": "#0B0F19",
+                      "surface-dim": "#0f131d",
+                      "primary-fixed-dim": "#6bd8cb",
+                      "glass-bg": "rgba(15, 23, 42, 0.65)",
+                      "aurora-teal": "#0D9488",
+                      "tertiary": "#ffb2b7",
+                      "on-background": "#dfe2f1",
+                      "error-container": "#93000a",
+                      "tertiary-fixed-dim": "#ffb2b7",
+                      "on-error": "#690005",
+                      "on-secondary-fixed": "#002113",
+                      "tertiary-fixed": "#ffdadb",
+                      "surface-container": "#1c1f2a",
+                      "on-secondary-container": "#00311f",
+                      "surface-container-high": "#262a35",
+                      "on-error-container": "#ffdad6",
+                      "tertiary-container": "#ff516a",
+                      "frost-white": "#F8FAFC",
+                      "outline": "#879391",
+                      "primary-fixed": "#89f5e7",
+                      "secondary-fixed-dim": "#4edea3",
+                      "inverse-surface": "#dfe2f1",
+                      "primary": "#6bd8cb",
+                      "surface": "#0f131d",
+                      "on-tertiary": "#67001b",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-surface-variant": "#bcc9c6",
+                      "inverse-primary": "#006a61",
+                      "on-primary-fixed-variant": "#005049",
+                      "surface-tint": "#6bd8cb",
+                      "outline-variant": "#3d4947",
+                      "on-secondary": "#003824"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "80px",
+                      "unit": "4px",
+                      "margin-tablet": "40px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-md": ["Outfit"],
+                      "headline-xl": ["Plus Jakarta Sans"],
+                      "label-md": ["Outfit"],
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "body-lg": ["Outfit"],
+                      "label-sm": ["Outfit"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "headline-lg-mobile": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-obsidian text-on-surface font-body-md min-h-screen relative overflow-x-hidden">
+<!-- Subtle Background Elements -->
+<div class="fixed top-0 right-0 w-[500px] h-[500px] bg-aurora-teal/10 blur-[120px] -z-10 rounded-full"></div>
+<div class="fixed bottom-0 left-0 w-[400px] h-[400px] bg-deep-indigo/10 blur-[120px] -z-10 rounded-full"></div>
+<!-- Navigation -->
+<header class="fixed top-0 w-full bg-glass-bg backdrop-blur-xl border-b border-glass-border shadow-sm z-50">
+<div class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">TRAVELLER</div>
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="#">Explore</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Itineraries</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="#">Stays</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="#">Adventures</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined text-primary p-2 hover:bg-white/10 rounded-full transition-all duration-300 active:scale-95">notifications</button>
+<button class="material-symbols-outlined text-primary p-2 hover:bg-white/10 rounded-full transition-all duration-300 active:scale-95">account_circle</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-32 pb-20 px-4 md:px-margin-desktop max-w-container-max mx-auto">
+<div class="glass-panel rounded-lg p-8 md:p-12 flex flex-col md:flex-row gap-12 min-h-[700px]">
+<!-- Left Column: Constraint Editor -->
+<section class="w-full md:w-[45%] flex flex-col gap-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Extracted Travel Constraints</h3>
+<p class="text-silver-sage font-body-md">Refine the AI's understanding of your journey.</p>
+</div>
+<div class="space-y-6">
+<!-- Destination Tags -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Destination Tags</label>
+<div class="flex flex-wrap gap-2 p-3 rounded-DEFAULT bg-white/5 border border-glass-border">
+<span class="flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-label-md border border-primary/20">
+                                Tokyo (Japan) <button class="material-symbols-outlined text-[16px]">close</button>
+</span>
+<span class="flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-label-md border border-primary/20">
+                                Kyoto (Japan) <button class="material-symbols-outlined text-[16px]">close</button>
+</span>
+<button class="text-primary/60 hover:text-primary material-symbols-outlined text-[20px] self-center">add_circle</button>
+</div>
+</div>
+<!-- Trip Duration -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Trip Duration</label>
+<div class="flex items-center justify-between p-3 rounded-DEFAULT bg-white/5 border border-glass-border">
+<button class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center border border-glass-border active:scale-95 transition-transform">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<span class="font-headline-md text-headline-md text-frost-white">5 Days</span>
+<button class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center border border-glass-border active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Total Budget -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Total Budget</label>
+<span class="text-sunset-coral font-bold text-headline-md">$3,000</span>
+</div>
+<input class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-sunset-coral" max="10000" min="500" step="500" type="range" value="3000"/>
+</div>
+<!-- Preferences & Avoidances -->
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Preferences</label>
+<div class="space-y-2">
+<div class="px-3 py-2 rounded-DEFAULT border border-aurora-teal/40 bg-aurora-teal/5 text-label-md text-aurora-teal">Food &amp; Dining</div>
+<div class="px-3 py-2 rounded-DEFAULT border border-aurora-teal/40 bg-aurora-teal/5 text-label-md text-aurora-teal">Temples &amp; History</div>
+<div class="px-3 py-2 rounded-DEFAULT border border-aurora-teal/40 bg-aurora-teal/5 text-label-md text-aurora-teal">Nature Walks</div>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Avoidances</label>
+<div class="space-y-2">
+<div class="px-3 py-2 rounded-DEFAULT border border-sunset-coral/40 bg-sunset-coral/5 text-label-md text-sunset-coral">Large Crowds</div>
+<div class="px-3 py-2 rounded-DEFAULT border border-sunset-coral/40 bg-sunset-coral/5 text-label-md text-sunset-coral">Early Mornings</div>
+<div class="px-3 py-2 rounded-DEFAULT border border-sunset-coral/40 bg-sunset-coral/5 text-label-md text-sunset-coral">Luxury Hotels</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="mt-auto flex flex-col sm:flex-row gap-4">
+<button class="flex-1 px-8 py-4 rounded-DEFAULT border border-glass-border bg-white/5 hover:bg-white/10 transition-all font-label-md text-frost-white active:scale-95">Update &amp; Regenerate</button>
+<button class="flex-1 px-8 py-4 rounded-DEFAULT bg-gradient-to-r from-aurora-teal to-emerald text-frost-white font-bold font-label-md shadow-[0_0_20px_rgba(13,148,136,0.3)] hover:brightness-110 transition-all active:scale-95">Generate Itinerary</button>
+</div>
+</section>
+<!-- Vertical Divider -->
+<div class="hidden md:block w-px bg-gradient-to-b from-transparent via-glass-border to-transparent"></div>
+<!-- Right Column: AI Orchestration -->
+<section class="w-full md:w-[50%] flex flex-col gap-10">
+<div class="flex items-center gap-4">
+<h4 class="font-label-sm text-label-sm uppercase tracking-[0.2em] text-silver-sage">AI Agent Orchestration Pipeline</h4>
+<div class="flex-1 h-px bg-glass-border"></div>
+</div>
+<!-- Pipeline Visualization -->
+<div class="relative pl-12 flex flex-col gap-10 py-4">
+<!-- Progress Line -->
+<div class="absolute left-[20px] top-4 bottom-4 w-[2px] node-line"></div>
+<!-- Node 1 -->
+<div class="relative flex items-center gap-6">
+<div class="absolute -left-[38px] w-6 h-6 rounded-full bg-aurora-teal border-4 border-obsidian flex items-center justify-center z-10 shadow-lg">
+<span class="material-symbols-outlined text-[14px] text-frost-white font-bold">check</span>
+</div>
+<div>
+<p class="font-label-md text-frost-white font-bold">Orchestrator Agent</p>
+<p class="text-label-sm text-emerald">Parsing constraints and mapping graph nodes...</p>
+</div>
+</div>
+<!-- Node 2 -->
+<div class="relative flex items-center gap-6">
+<div class="absolute -left-[38px] w-6 h-6 rounded-full bg-primary border-4 border-obsidian pulse-gold z-10"></div>
+<div class="bg-primary/5 p-4 rounded-DEFAULT border border-primary/20 aurora-glow">
+<p class="font-label-md text-primary font-bold">Research Agent</p>
+<p class="text-label-sm text-silver-sage">Analyzing historical density data and weather trends...</p>
+</div>
+</div>
+<!-- Node 3 -->
+<div class="relative flex items-center gap-6 opacity-40">
+<div class="absolute -left-[38px] w-6 h-6 rounded-full bg-white/20 border-4 border-obsidian z-10"></div>
+<div>
+<p class="font-label-md text-frost-white">Logistics &amp; Transit Agent</p>
+<p class="text-label-sm text-silver-sage">Pending data from Research Agent...</p>
+</div>
+</div>
+<!-- Node 4 -->
+<div class="relative flex items-center gap-6 opacity-40">
+<div class="absolute -left-[38px] w-6 h-6 rounded-full bg-white/20 border-4 border-obsidian z-10"></div>
+<div>
+<p class="font-label-md text-frost-white">Budget Optimization Agent</p>
+<p class="text-label-sm text-silver-sage">Waiting for itinerary structure...</p>
+</div>
+</div>
+<!-- Node 5 -->
+<div class="relative flex items-center gap-6 opacity-40">
+<div class="absolute -left-[38px] w-6 h-6 rounded-full bg-white/20 border-4 border-obsidian z-10"></div>
+<div>
+<p class="font-label-md text-frost-white">Consistency Review Agent</p>
+<p class="text-label-sm text-silver-sage">Final validation phase...</p>
+</div>
+</div>
+</div>
+<!-- Live Feed Card -->
+<div class="mt-auto glass-panel p-6 rounded-DEFAULT border-primary/10 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 overflow-hidden">
+<div class="h-full bg-primary animate-[shimmer_2s_infinite_linear]" style="background-image: linear-gradient(90deg, transparent, #6bd8cb, transparent); background-size: 200% 100%;"></div>
+</div>
+<div class="flex gap-4">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between">
+<span class="font-label-sm text-primary uppercase">Live Processing</span>
+<span class="text-[10px] text-silver-sage">SEC-204 // ADDR: JPN-TOK</span>
+</div>
+<p class="text-body-md text-on-surface leading-relaxed">
+                                Destination Research Agent is curating crowd-avoidant experiences in <span class="text-primary font-bold">Yanaka</span> and <span class="text-primary font-bold">Arashiyama</span>, cross-referencing with your <span class="text-sunset-coral">"Early Morning"</span> avoidance constraint...
+                            </p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 bg-obsidian border-t border-glass-border">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-8">
+<div class="flex flex-col items-center md:items-start gap-4">
+<div class="font-headline-sm text-headline-sm font-bold text-primary">TRAVELLER</div>
+<p class="text-silver-sage font-label-sm">© 2024 Traveller AI. Guided by the stars.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-silver-sage hover:text-aurora-teal transition-colors font-label-sm" href="#">Partners</a>
+<a class="text-silver-sage hover:text-aurora-teal transition-colors font-label-sm" href="#">Privacy Policy</a>
+<a class="text-silver-sage hover:text-aurora-teal transition-colors font-label-sm" href="#">Terms of Service</a>
+<a class="text-silver-sage hover:text-aurora-teal transition-colors font-label-sm" href="#">Contact</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple animation to shift the progress bar as if it's "loading"
+        const slider = document.querySelector('input[type="range"]');
+        const budgetValue = document.querySelector('.text-sunset-coral.font-bold.text-headline-md');
+
+        slider.addEventListener('input', (e) => {
+            budgetValue.textContent = `$${parseInt(e.target.value).toLocaleString()}`;
+        });
+
+        // Add keyframe for shimmer
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body></html>

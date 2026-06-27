@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Traveller | Budget Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            background: rgba(15, 23, 42, 0.75);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .aurora-glow {
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.15);
+        }
+        .neo-ring {
+            background: conic-gradient(from 0deg, #0D9488 0%, #10B981 60%, transparent 60%);
+        }
+        body {
+            background-color: #0B0F19;
+            color: #F8FAFC;
+            overflow-x: hidden;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdadb",
+                        "on-primary-fixed": "#00201d",
+                        "frost-white": "#F8FAFC",
+                        "inverse-on-surface": "#2c303b",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface": "#dfe2f1",
+                        "surface-bright": "#353944",
+                        "deep-indigo": "#312E81",
+                        "tertiary-container": "#ff516a",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "obsidian": "#0B0F19",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                        "silver-sage": "#94A3B8",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-secondary": "#003824",
+                        "on-background": "#dfe2f1",
+                        "on-primary-container": "#00302b",
+                        "on-surface-variant": "#bcc9c6",
+                        "on-secondary-fixed-variant": "#005236",
+                        "error": "#ffb4ab",
+                        "primary-container": "#29a195",
+                        "aurora-teal": "#0D9488",
+                        "primary": "#6bd8cb",
+                        "on-tertiary": "#67001b",
+                        "sunset-coral": "#F43F5E",
+                        "primary-fixed-dim": "#6bd8cb",
+                        "surface-container-high": "#262a35",
+                        "tertiary-fixed-dim": "#ffb2b7",
+                        "on-primary-fixed-variant": "#005049",
+                        "surface-container-low": "#171b26",
+                        "surface-dim": "#0f131d",
+                        "surface-container-lowest": "#0a0e18",
+                        "on-secondary-fixed": "#002113",
+                        "tertiary": "#ffb2b7",
+                        "secondary-container": "#00a572",
+                        "on-tertiary-container": "#5b0017",
+                        "primary-fixed": "#89f5e7",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#00311f",
+                        "secondary": "#4edea3",
+                        "surface": "#0f131d",
+                        "background": "#0f131d",
+                        "surface-variant": "#313540",
+                        "outline": "#879391",
+                        "surface-container-highest": "#313540",
+                        "inverse-surface": "#dfe2f1",
+                        "on-tertiary-fixed": "#40000d",
+                        "inverse-primary": "#006a61",
+                        "emerald": "#10B981",
+                        "surface-container": "#1c1f2a",
+                        "glass-bg": "rgba(15, 23, 42, 0.65)",
+                        "surface-tint": "#6bd8cb",
+                        "outline-variant": "#3d4947",
+                        "on-primary": "#003732",
+                        "on-tertiary-fixed-variant": "#92002a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-desktop": "80px",
+                        "margin-tablet": "40px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Outfit"],
+                        "headline-xl": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-md": ["Outfit"],
+                        "body-lg": ["Outfit"],
+                        "label-sm": ["Outfit"],
+                        "headline-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="antialiased selection:bg-aurora-teal selection:text-frost-white">
+<!-- Top Navigation -->
+<nav class="fixed top-0 w-full z-50 backdrop-blur-md bg-glass-bg border-b border-glass-border shadow-md">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-frost-white">TRAVELLER</span>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-silver-sage font-medium hover:text-aurora-teal transition-colors duration-300 font-body-md text-body-md" href="#">Explore</a>
+<a class="text-silver-sage font-medium hover:text-aurora-teal transition-colors duration-300 font-body-md text-body-md" href="#">Itineraries</a>
+<a class="text-aurora-teal font-bold border-b-2 border-aurora-teal pb-1 font-body-md text-body-md" href="#">Insights</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-silver-sage cursor-pointer hover:text-frost-white transition-colors">notifications</span>
+<span class="material-symbols-outlined text-silver-sage cursor-pointer hover:text-frost-white transition-colors" data-weight="fill">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-32 pb-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto space-y-12">
+<!-- Dashboard Header -->
+<header class="space-y-2">
+<h1 class="font-headline-xl text-headline-xl text-frost-white">Financial Workspace</h1>
+<p class="font-body-lg text-body-lg text-silver-sage max-w-2xl">Real-time budget analysis for your Kyoto & Osaka Expedition. AI-driven forecasting and tactical optimizations.</p>
+</header>
+<!-- Top Row (3 Gauges) -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Card 1: Circular Progress Gauge -->
+<div class="glass-card rounded-lg p-8 flex flex-col items-center justify-center text-center space-y-6 aurora-glow relative overflow-hidden">
+<div class="relative w-48 h-48 flex items-center justify-center">
+<div class="absolute inset-0 rounded-full border-8 border-white/5"></div>
+<div class="absolute inset-0 rounded-full border-8 neo-ring opacity-80" style="clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 10%);"></div>
+<div class="text-center z-10">
+<p class="font-headline-md text-headline-md text-frost-white">$1,787</p>
+<p class="font-label-sm text-label-sm text-silver-sage uppercase tracking-widest">Spent</p>
+<div class="h-px w-8 bg-glass-border mx-auto my-2"></div>
+<p class="font-body-md text-body-md text-silver-sage">$3,000 total</p>
+</div>
+</div>
+<div class="space-y-1">
+<p class="font-body-md text-body-md text-emerald flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">trending_down</span>
+                        You are $1,213 under budget
+                    </p>
+<p class="font-label-sm text-label-sm text-silver-sage">59.5% of total allocation consumed</p>
+</div>
+</div>
+<!-- Card 2: Cost Forecast Card -->
+<div class="glass-card rounded-lg p-8 flex flex-col justify-between space-y-6">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-frost-white">Cost Forecast</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-block w-2 h-2 rounded-full bg-emerald animate-pulse"></span>
+<p class="font-label-md text-label-md text-aurora-teal">Review Agent Confidence: 92%</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-silver-sage">query_stats</span>
+</div>
+<!-- Sparkline Chart Mockup -->
+<div class="relative h-24 w-full flex items-end gap-1">
+<div class="flex-1 bg-aurora-teal/20 rounded-t-sm h-[40%] hover:bg-aurora-teal/40 transition-colors"></div>
+<div class="flex-1 bg-aurora-teal/20 rounded-t-sm h-[65%] hover:bg-aurora-teal/40 transition-colors"></div>
+<div class="flex-1 bg-aurora-teal/20 rounded-t-sm h-[55%] hover:bg-aurora-teal/40 transition-colors"></div>
+<div class="flex-1 bg-aurora-teal/20 rounded-t-sm h-[85%] hover:bg-aurora-teal/40 transition-colors"></div>
+<div class="flex-1 bg-aurora-teal/20 rounded-t-sm h-[75%] hover:bg-aurora-teal/40 transition-colors"></div>
+<!-- Actual vs Target indicator -->
+<div class="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
+<div class="w-full border-t border-dashed border-white/10"></div>
+<div class="w-full border-t border-dashed border-white/20"></div>
+<div class="w-full border-t border-dashed border-white/10"></div>
+</div>
+</div>
+<div class="flex justify-between text-silver-sage font-label-sm text-label-sm">
+<span>Day 1</span>
+<span>Day 2</span>
+<span>Day 3</span>
+<span>Day 4</span>
+<span>Day 5</span>
+</div>
+</div>
+<!-- Card 3: What-If Optimizer -->
+<div class="glass-card rounded-lg p-8 flex flex-col justify-between space-y-6 border-l-4 border-l-aurora-teal">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-aurora-teal/10 rounded-full">
+<span class="material-symbols-outlined text-aurora-teal">psychology</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-frost-white">"What-If" Optimizer</h3>
+</div>
+<div class="space-y-4">
+<label class="block font-label-md text-label-md text-silver-sage">Target Budget Ceiling</label>
+<input class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-aurora-teal" max="5000" min="1000" type="range" value="1500"/>
+<div class="flex justify-between font-label-sm text-label-sm text-silver-sage">
+<span>$1,000</span>
+<span class="text-frost-white font-bold">$1,500</span>
+<span>$5,000</span>
+</div>
+</div>
+<div class="p-4 bg-obsidian/40 rounded-lg border border-glass-border">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="text-aurora-teal font-bold italic">AI Suggestion:</span> Adjusting to $1,500 will swap 4-star hotels for guesthouses in Kyoto.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Bottom Row (Grid of 6 Category Cards) -->
+<section class="space-y-6">
+<h2 class="font-headline-md text-headline-md text-frost-white flex items-center gap-2">
+<span class="material-symbols-outlined text-aurora-teal">category</span>
+                Allocation Breakdown
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-gutter">
+<!-- Category 1: Flights -->
+<div class="glass-card rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-emerald">flight</span>
+<span class="font-label-sm text-label-sm text-silver-sage">24%</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-silver-sage uppercase">Flights</p>
+<p class="font-headline-md text-headline-md text-frost-white">$720</p>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-emerald h-full w-[24%]"></div>
+</div>
+</div>
+<!-- Category 2: Stay -->
+<div class="glass-card rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-deep-indigo">hotel</span>
+<span class="font-label-sm text-label-sm text-silver-sage">31%</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-silver-sage uppercase">Stay</p>
+<p class="font-headline-md text-headline-md text-frost-white">$560</p>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-deep-indigo h-full w-[31%]"></div>
+</div>
+</div>
+<!-- Category 3: Transit -->
+<div class="glass-card rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-aurora-teal">directions_subway</span>
+<span class="font-label-sm text-label-sm text-silver-sage">7%</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-silver-sage uppercase">Transit</p>
+<p class="font-headline-md text-headline-md text-frost-white">$127</p>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-aurora-teal h-full w-[7%]"></div>
+</div>
+</div>
+<!-- Category 4: Food -->
+<div class="glass-card rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-sunset-coral">restaurant</span>
+<span class="font-label-sm text-label-sm text-silver-sage">11%</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-silver-sage uppercase">Food</p>
+<p class="font-headline-md text-headline-md text-frost-white">$200</p>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-sunset-coral h-full w-[11%]"></div>
+</div>
+</div>
+<!-- Category 5: Activities -->
+<div class="glass-card rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-tertiary-container">local_activity</span>
+<span class="font-label-sm text-label-sm text-silver-sage">2%</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-silver-sage uppercase">Activities</p>
+<p class="font-headline-md text-headline-md text-frost-white">$30</p>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary-container h-full w-[2%]"></div>
+</div>
+</div>
+<!-- Category 6: Buffer -->
+<div class="glass-card rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-silver-sage">savings</span>
+<span class="font-label-sm text-label-sm text-silver-sage">8%</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-silver-sage uppercase">Buffer</p>
+<p class="font-headline-md text-headline-md text-frost-white">$150</p>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-silver-sage h-full w-[8%]"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Action Bar -->
+<section class="glass-card rounded-lg p-8 flex flex-col md:flex-row justify-between items-center gap-6 aurora-glow">
+<div class="flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-aurora-teal flex items-center justify-center shadow-[0_0_15px_rgba(13,148,136,0.4)]">
+<span class="material-symbols-outlined text-frost-white">rocket_launch</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-frost-white">Finalize Itinerary</h4>
+<p class="font-body-md text-body-md text-silver-sage">Lock in these prices and generate your bookings.</p>
+</div>
+</div>
+<div class="flex gap-4 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-8 py-3 rounded-full border border-glass-border font-body-md text-body-md text-frost-white hover:bg-white/5 transition-all active:scale-95">Save Draft</button>
+<button class="flex-1 md:flex-none px-8 py-3 rounded-full bg-gradient-to-r from-aurora-teal to-emerald font-body-md text-body-md font-semibold text-frost-white shadow-lg hover:shadow-aurora-teal/20 transition-all active:scale-95">Confirm & Book</button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 px-margin-desktop mt-20 bg-surface-container-lowest border-t border-glass-border">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter max-w-container-max mx-auto">
+<div class="space-y-4">
+<span class="font-headline-md text-headline-md text-frost-white font-bold">TRAVELLER</span>
+<p class="font-body-md text-body-md text-silver-sage max-w-xs">Elevating global discovery through visionary intelligence and curated transparency.</p>
+</div>
+<div class="flex flex-col gap-3">
+<a class="text-silver-sage font-label-sm text-label-sm hover:text-frost-white transition-colors" href="#">Privacy Policy</a>
+<a class="text-silver-sage font-label-sm text-label-sm hover:text-frost-white transition-colors" href="#">Terms of Service</a>
+<a class="text-silver-sage font-label-sm text-label-sm hover:text-frost-white transition-colors" href="#">Partnerships</a>
+<a class="text-silver-sage font-label-sm text-label-sm hover:text-frost-white transition-colors" href="#">Help Center</a>
+</div>
+<div class="flex flex-col justify-between items-start md:items-end">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-silver-sage cursor-pointer hover:text-aurora-teal transition-colors">language</span>
+<span class="material-symbols-outlined text-silver-sage cursor-pointer hover:text-aurora-teal transition-colors">share</span>
+</div>
+<p class="font-label-sm text-label-sm text-silver-sage mt-8 md:mt-0">© 2024 Traveller. All rights reserved.</p>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction: Update slider value visually
+        const slider = document.querySelector('input[type="range"]');
+        const display = slider.nextElementSibling.children[1];
+        
+        slider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            display.textContent = `$${parseInt(val).toLocaleString()}`;
+            
+            // Subtle visual feedback on slider handle
+            if (val < 1500) {
+                slider.classList.replace('accent-aurora-teal', 'accent-sunset-coral');
+            } else {
+                slider.classList.replace('accent-sunset-coral', 'accent-aurora-teal');
+            }
+        });
+    </script>
+</body></html>

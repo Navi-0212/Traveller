@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Traveller | AI Co-Pilot Collaboration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Outfit:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#4edea3",
+                    "primary-fixed-dim": "#6bd8cb",
+                    "primary": "#6bd8cb",
+                    "tertiary-fixed": "#ffdadb",
+                    "on-tertiary": "#67001b",
+                    "surface-variant": "#313540",
+                    "secondary-container": "#00a572",
+                    "on-primary": "#003732",
+                    "error-container": "#93000a",
+                    "on-secondary-container": "#00311f",
+                    "glass-bg": "rgba(15, 23, 42, 0.65)",
+                    "on-primary-fixed-variant": "#005049",
+                    "tertiary-fixed-dim": "#ffb2b7",
+                    "on-primary-container": "#00302b",
+                    "sunset-coral": "#F43F5E",
+                    "deep-indigo": "#312E81",
+                    "surface-bright": "#353944",
+                    "surface-dim": "#0f131d",
+                    "tertiary-container": "#ff516a",
+                    "outline-variant": "#3d4947",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-background": "#dfe2f1",
+                    "emerald": "#10B981",
+                    "inverse-primary": "#006a61",
+                    "on-error-container": "#ffdad6",
+                    "on-surface-variant": "#bcc9c6",
+                    "secondary-fixed-dim": "#4edea3",
+                    "primary-container": "#29a195",
+                    "on-tertiary-fixed": "#40000d",
+                    "silver-sage": "#94A3B8",
+                    "primary-fixed": "#89f5e7",
+                    "surface-container": "#1c1f2a",
+                    "secondary-fixed": "#6ffbbe",
+                    "outline": "#879391",
+                    "on-tertiary-fixed-variant": "#92002a",
+                    "surface-tint": "#6bd8cb",
+                    "glass-border": "rgba(255, 255, 255, 0.08)",
+                    "inverse-surface": "#dfe2f1",
+                    "surface": "#0f131d",
+                    "on-surface": "#dfe2f1",
+                    "surface-container-lowest": "#0a0e18",
+                    "error": "#ffb4ab",
+                    "surface-container-high": "#262a35",
+                    "inverse-on-surface": "#2c303b",
+                    "obsidian": "#0B0F19",
+                    "tertiary": "#ffb2b7",
+                    "on-tertiary-container": "#5b0017",
+                    "on-secondary-fixed": "#002113",
+                    "surface-container-low": "#171b26",
+                    "background": "#0f131d",
+                    "on-error": "#690005",
+                    "aurora-teal": "#0D9488",
+                    "frost-white": "#F8FAFC",
+                    "on-secondary": "#003824",
+                    "on-primary-fixed": "#00201d",
+                    "surface-container-highest": "#313540"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "80px",
+                    "gutter": "24px",
+                    "container-max": "1440px",
+                    "unit": "4px",
+                    "margin-tablet": "40px",
+                    "margin-mobile": "20px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Outfit"],
+                    "body-lg": ["Outfit"],
+                    "label-md": ["Outfit"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "label-sm": ["Outfit"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0B0F19;
+            color: #dfe2f1;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .aurora-glow {
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.15);
+        }
+        .gradient-button {
+            background: linear-gradient(135deg, #0D9488 0%, #10B981 100%);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .gradient-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4);
+        }
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden">
+<!-- Background Dashboard (Dimmed & Blurred) -->
+<div class="absolute inset-0 z-0 transition-all duration-700 filter blur-md brightness-50">
+<!-- Replicating TopNavBar Logic partially for background context -->
+<header class="flex justify-between items-center px-margin-desktop py-4 border-b border-glass-border">
+<div class="font-headline-md text-headline-md font-bold tracking-tighter text-frost-white">TRAVELLER</div>
+<div class="flex items-center gap-6">
+<div class="flex -space-x-3 overflow-hidden">
+<img class="inline-block h-10 w-10 rounded-full ring-2 ring-obsidian object-cover" data-alt="Close up profile portrait of a stylish woman with glasses, soft studio lighting, professional corporate aesthetic, neutral background, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdi51KVEUU5CW3VM3u5oACHMXlkPrl9tf6a9VKDKRHB89rd_4Z3bYnOdUiGzU30vMMKv5ws9bSwO6MiiJSa_uFcuIghqGKByUpXv8Aqbnppp-1WzjS7uH6EtWRqcHIBjx8IoAWjViFNH5AiPGJYaRgh-NUEPoWDCyNnVZyO2_zNpEdoVQpt3Yzpr-tuHPVKNZmQUqdXxj4tn31FwN1EPob7kEH9Ww0RwU-juzzXtnGj6oNJMemqDHNxnonAGvgP1-VPv5x5Qlv_cI"/>
+<img class="inline-block h-10 w-10 rounded-full ring-2 ring-obsidian object-cover" data-alt="Close up profile portrait of a smiling young man, outdoors in natural golden hour light, wearing a casual linen shirt, travel lifestyle aesthetic, soft bokeh background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMCyJTD0D2Olpkuqok_eOHIQFAv9VHbhl6S5V0hgqRGNkwWvR29jrJnxzcDqJGLuheUIFcwOcR6lNOw48wo1LQH1q8ZJONppsBesvsmLNtQTEaQB0o4YvWjJNnI9cPHlkaXvLRca43Ve-hIIxibalP9JGrgb6pRKkePaK5mAGfjINJKB3r4BVLP11jzRU5AHz8VVEcQwzM4d6gibbdI1D97DA4qDLd9eRIk6daS-YIArSiCg-Y6xGeLTe1bl0oY5rSdEo2te9FdBM"/>
+<img class="inline-block h-10 w-10 rounded-full ring-2 ring-obsidian object-cover" data-alt="Close up profile portrait of a mature woman with a warm expression, indoor ambient lighting, high-quality digital photography, professional and welcoming atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8sg573rU8DNi6uS_oY1k-r5agTJAJdThn0UqUw2cdqf7JnQR1IkBp9hmCMNgWbVAsRMrN2Wp7MlRsY2lsOBwtcVMdtl6DjSwmjea75VEWG9oc4VUqxJV66ylbX4ONludm1THKgXeAUx6mKwOKYVg4op0VwMM80r4FbjRCub1ekan00YZv5ml-sOjFtHmFjvzJFOGNFhucNyb3KK1N9YruPy5mrNDX0YMjKD1puMXWq0SyoFC8vM3ktFCU21akcN1Vn3vxWCs25VQ"/>
+</div>
+<button class="bg-surface-container-high px-4 py-2 rounded-full font-label-md text-label-md text-frost-white flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Add Planner
+                </button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-margin-desktop mt-12 grid grid-cols-12 gap-gutter">
+<!-- Sidebar placeholder -->
+<div class="col-span-3 space-y-8">
+<div class="h-64 glass-panel rounded-lg"></div>
+<div class="h-40 glass-panel rounded-lg"></div>
+</div>
+<!-- Content placeholder -->
+<div class="col-span-9 space-y-6">
+<div class="flex justify-between items-end">
+<div class="space-y-2">
+<h1 class="font-headline-xl text-headline-xl text-frost-white">Kyoto Explorer</h1>
+<p class="text-silver-sage font-body-lg text-body-lg">Oct 12 - Oct 18 • 4 Travelers</p>
+</div>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-3 gap-6">
+<div class="col-span-2 h-96 glass-panel rounded-lg p-6 relative">
+<!-- Floating Collaboration Badge -->
+<div class="absolute top-1/2 left-1/3 z-20 flex items-center gap-2 bg-aurora-teal px-3 py-1.5 rounded-full shadow-lg border border-white/20 animate-bounce">
+<span class="material-symbols-outlined text-[14px] text-white" style="font-variation-settings: 'FILL' 1;">near_me</span>
+<span class="text-[12px] font-bold text-white whitespace-nowrap">Priya is editing Day 3</span>
+</div>
+<div class="w-full h-full bg-surface-container-low rounded-lg"></div>
+</div>
+<div class="h-96 glass-panel rounded-lg"></div>
+</div>
+</div>
+</main>
+</div>
+<!-- Right Side Overlay: AI Co-Pilot Chat Drawer -->
+<aside class="fixed top-0 right-0 h-full w-[30%] min-w-[400px] z-50 glass-panel border-l border-glass-border shadow-2xl flex flex-col">
+<!-- Drawer Header -->
+<div class="p-6 border-b border-glass-border flex justify-between items-center bg-white/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-aurora-teal/20 flex items-center justify-center border border-aurora-teal/30">
+<span class="material-symbols-outlined text-aurora-teal" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-frost-white leading-tight">AI Travel Co-Pilot</h2>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 bg-emerald rounded-full pulse"></span>
+<span class="font-label-sm text-label-sm text-silver-sage tracking-wider">ONLINE &amp; COLLABORATING</span>
+</div>
+</div>
+</div>
+<button class="p-2 hover:bg-white/10 rounded-full transition-colors">
+<span class="material-symbols-outlined text-silver-sage">close</span>
+</button>
+</div>
+<!-- Chat History -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 chat-scroll">
+<!-- User Message -->
+<div class="flex flex-col items-end space-y-2">
+<div class="max-w-[85%] bg-surface-container-high p-4 rounded-2xl rounded-tr-none text-on-surface font-body-md text-body-md leading-relaxed border border-white/5">
+                    Let's move the Arashiyama visit from Day 3 afternoon to Day 4 morning, and swap Koenji Ramen for a sushi lunch.
+                </div>
+<span class="text-label-sm text-silver-sage/50 pr-2">14:02</span>
+</div>
+<!-- AI Response -->
+<div class="flex flex-col items-start space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-aurora-teal/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-aurora-teal" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<span class="font-label-md text-label-md text-aurora-teal uppercase tracking-widest">Co-Pilot Suggestion</span>
+</div>
+<div class="max-w-[95%] space-y-4">
+<div class="bg-deep-indigo/20 p-4 rounded-2xl rounded-tl-none text-on-surface font-body-md text-body-md leading-relaxed border border-deep-indigo/30 aurora-glow">
+                        I've re-sequenced the route. Arashiyama fits perfectly on Day 4. Let's look at the changes:
+                    </div>
+<!-- Diff Card -->
+<div class="bg-surface-container-lowest border border-glass-border rounded-xl p-4 space-y-4 overflow-hidden relative">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-silver-sage uppercase">Proposed Diff</span>
+<span class="bg-emerald/10 text-emerald text-[11px] font-bold px-2 py-0.5 rounded border border-emerald/20">OPTIMIZED</span>
+</div>
+<div class="space-y-3">
+<!-- Removed -->
+<div class="flex items-start gap-3 group">
+<span class="material-symbols-outlined text-sunset-coral mt-1" style="font-variation-settings: 'FILL' 1;">remove_circle</span>
+<div>
+<p class="text-silver-sage line-through decoration-sunset-coral/50 font-medium">Day 3 PM: Arashiyama Bamboo Grove</p>
+<p class="text-[12px] text-sunset-coral/70">Removing from Day 3</p>
+</div>
+</div>
+<!-- Added -->
+<div class="flex items-start gap-3 group">
+<span class="material-symbols-outlined text-emerald mt-1" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<div>
+<p class="text-frost-white font-medium">Day 4 AM: Arashiyama Bamboo Grove</p>
+<p class="text-[12px] text-emerald/70">Better morning light &amp; fewer crowds</p>
+</div>
+</div>
+<hr class="border-glass-border"/>
+<!-- Budget Context -->
+<div class="flex items-center gap-2 bg-emerald/5 p-2 rounded-lg border border-emerald/10">
+<span class="material-symbols-outlined text-emerald text-[18px]">account_balance_wallet</span>
+<span class="text-emerald font-label-md text-label-md">Budget change: - $15 (Sushi lunch value)</span>
+</div>
+</div>
+</div>
+<button class="w-full py-4 rounded-xl gradient-button font-headline-md text-body-md text-frost-white flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">check_circle</span>
+                        Apply Changes to Itinerary
+                    </button>
+</div>
+<span class="text-label-sm text-silver-sage/50 pl-2">14:03</span>
+</div>
+<!-- Collaboration Activity Notification -->
+<div class="flex justify-center">
+<div class="bg-surface-container/50 px-4 py-2 rounded-full border border-glass-border flex items-center gap-2">
+<div class="flex -space-x-1">
+<div class="w-5 h-5 rounded-full border border-obsidian bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">P</div>
+<div class="w-5 h-5 rounded-full border border-obsidian bg-green-500 flex items-center justify-center text-[10px] font-bold text-white">S</div>
+</div>
+<span class="text-label-sm text-silver-sage">Priya and Sam are viewing this diff...</span>
+</div>
+</div>
+</div>
+<!-- Chat Input -->
+<div class="p-6 border-t border-glass-border bg-white/5">
+<div class="flex items-center gap-3 bg-surface-container-highest/50 border border-glass-border rounded-full p-1 pl-5 aurora-glow">
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body-md text-body-md placeholder:text-silver-sage/50" placeholder="Ask AI to adjust your trip..." type="text"/>
+<div class="flex items-center gap-1 pr-1">
+<button class="p-2 hover:bg-white/10 rounded-full transition-colors text-silver-sage">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<button class="p-2 hover:bg-white/10 rounded-full transition-colors text-silver-sage">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-aurora-teal flex items-center justify-center text-frost-white shadow-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+<p class="text-center mt-3 font-label-sm text-label-sm text-silver-sage/30">Shift + Enter for new line</p>
+</div>
+</aside>
+<!-- Global Background Elements -->
+<div class="fixed inset-0 pointer-events-none z-[-1] opacity-40">
+
+</div>
+<!-- Simple Interactivity for the Drawer -->
+<script>
+        // Placeholder for simple transitions if needed
+        document.addEventListener('DOMContentLoaded', () => {
+            const drawer = document.querySelector('aside');
+            drawer.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                drawer.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                drawer.style.transform = 'translateX(0)';
+            }, 100);
+        });
+    </script>
+</body></html>
