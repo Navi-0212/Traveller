@@ -1,4 +1,6 @@
-# Traveller — Distributed Multi-Agent Collaborative Travel Orchestrator
+# 🌌 Traveller — Distributed Multi-Agent Collaborative Travel Orchestrator
+
+> A state-of-the-art AI Travel Agent that transforms conversational trip planning into optimized, budget-tracked, and geographically routed itineraries.
 
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -6,247 +8,119 @@
 [![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 [![Railway](https://img.shields.io/badge/Hosting-Railway-130f40?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app)
 
-Traveller is an enterprise-grade, distributed multi-agent system designed to automatically synthesize, budget-model, and geographically optimize multi-day travel itineraries. 
+---
 
-By leveraging a custom **5-Agent Pipeline with State Feedback and Self-Correction Loops** built on **FastAPI (Python)** and **Gemini 2.5 Flash Lite**, Traveller resolves the NP-hard constraints of itinerary generation—minimizing geographic backtracking, enforcing strict budget caps, adhering to positive/negative preferences, and optimizing daily travel load.
+## 🌟 The Core Vision
+
+Planning a trip is traditionally fragmented. Travelers spend hours bouncing between flight aggregators, hotel search engines, local blogs, mapping software, and Excel spreadsheets. 
+
+**Traveller** consolidates this entire workspace into a single interface. By combining a **premium glassmorphic SPA frontend** with a **5-agent self-correcting backend state machine** powered by **Gemini 2.5 Flash Lite**, Traveller automates the entire planning process from a single sentence.
 
 ---
 
-## 🏛️ System Architecture
-
-Traveller implements a decoupled, modern architecture: a high-performance ASGI FastAPI backend and a responsive, glassmorphic Single Page Application (SPA) frontend.
+## 🚀 How It Works (Step-by-Step)
 
 ```
-       ┌─────────────────────────────────────────────────────────────┐
-       │                 FRONTEND SPA (Vercel Edge)                  │
-       │   - Screen 1: NL Conversational Prompt Capture              │
-       │   - Screen 2: Dynamic Constraint Tag Editor & Pipeline UI   │
-       │   - Screen 3: Leaflet.js Map Timeline (Sequenced Pins)      │
-       │   - Screen 4: Budget Dashboard & What-If Ceilings           │
-       │   - Screen 5: Real-Time Diff Refiner (Co-Pilot Drawer)      │
-       └──────────────────────────────┬──────────────────────────────┘
-                                      │
-                        HTTP requests │ Proxied via Vercel Rewrite
-                        (JSON Payload)│ to bypass CORS pre-flights
-                                      ▼
-       ┌─────────────────────────────────────────────────────────────┐
-       │               FASTAPI ASGI BACKEND (Railway)                │
-       │   [Uvicorn / ASGI Server - Port 8080 - 0.0.0.0 Binding]     │
-       │                                                             │
-       │   /api/extract ──➔ Parses prompts into TravelConstraints     │
-       │   /api/plan    ──➔ Executes Multi-Agent Pipeline E2E        │
-       │   /api/refine  ──➔ Evaluates conversational diff edits      │
-       └──────────────────────────────┬──────────────────────────────┘
-                                      │
-                        google-genai  │ Structured Outputs
-                        SDK Calls     │ (JSON Schema Enforcement)
-                                      ▼
-       ┌─────────────────────────────────────────────────────────────┐
-       │                    GOOGLE GEMINI ENGINE                     │
-       │                 - Model: gemini-2.5-flash-lite              │
-       │                 - Context: 1M tokens                        │
-       └─────────────────────────────────────────────────────────────┘
+ 💬 1. Natural Language Prompt ──► 🏷️ 2. Constraint Tag Editor ──► 🤖 3. 5-Agent Pipeline
+                                                                           │
+ 💬 5. Conversational Co-Pilot  ◄── 📊 4. Interactive Map & Budget  ◄──────┘
 ```
+
+### 1️⃣ Prompt & Capture
+Type your trip idea naturally: *"Plan a 5-day foodie trip to Japan. Tokyo and Kyoto. Under $3000. Love ramen, hate crowds."*
+
+### 2️⃣ Edit & Tweak
+The **Master Orchestrator** instantly extracts destination details, days, budget, and vibes, rendering them as interactive tags. Adjust days, add new cities, or change the budget slider before building.
+
+### 3️⃣ Run the Pipeline
+Watch the **Agent Pipeline Visualizer** pulse in real-time as specialized AI agents coordinate tasks, calculate budgets, and verify constraints.
+
+### 4️⃣ Explore the Dashboard
+Explore a split-screen dashboard:
+* **Left**: A day-by-day accordion timeline categorized by activity type (Food, Sightseeing, Transit).
+* **Right**: An interactive **Leaflet.js map** displaying sequenced activity pins connected by a dashed route.
+* **Financials**: An SVG budget gauge with sparkline charts showing category allocations (accommodation, transit, buffer, etc.).
+
+### 5️⃣ Chat with your Co-Pilot
+Open the chat drawer to refine the itinerary: *"Add a ramen cooking class on Day 2"*. The co-pilot computes the change and presents a **visual diff box** showing additions and removals before hot-reloading the plan.
 
 ---
 
-## 🤖 The Multi-Agent Pipeline & State Machine
+## 🤖 Meet the AI Agent Team
 
-The core of Traveller is its execution pipeline. Rather than relying on a single, massive prompt (which often leads to hallucinations, constraint violations, and formatting errors), Traveller divides the task among five specialized micro-agents:
+Behind the scenes, Traveller runs a distributed team of 5 specialized agents that work together to build, calculate, and audit your itinerary.
 
-```
-               [ User Input ]
-                      │
-                      ▼
-            ┌───────────────────┐
-            │ 1. Orchestrator   │ (Extracts TravelConstraints, Temp: 0.3)
-            └─────────┬─────────┘
-                      │
-                      ├──────────────────────────┐
-                      ▼                          ▼
-            ┌───────────────────┐      ┌───────────────────┐
-            │ 2. Destination    │      │ 4. Budget Agent   │
-            │    Research       │      │    (Cost Model)   │ (Temp: 0.3)
-            └─────────┬─────────┘      └─────────┬─────────┘
-                      │                          │
-                      ▼                          │
-            ┌───────────────────┐                │
-            │ 3. Logistics      │                │
-            │    Coordinator    │ (Temp: 0.3)    │
-            └─────────┬─────────┘                │
-                      │                          │
-                      ▼                          ▼
-                   [Itinerary Output]  [Budget Breakdown]
-                      │                          │
-                      └────────────┬─────────────┘
-                                   ▼
-                         ┌───────────────────┐
-                         │ 5. Review Agent   │ (Temp: 0.3)
-                         └─────────┬─────────┘
-                                   │
-                                   ├───────────────┐
-                              FAIL │ (Max 2 Retries)│ PASS
-                                   ▼               ▼
-                           [Feedback Loop]   [Return 200 OK]
-                                   │           ItineraryPlan
-                                   ▼
-                         (Re-run Research &
-                          Logistics with logs)
-```
+| Agent Persona | Role | Primary Objective | Temperature |
+| :--- | :--- | :--- | :--- |
+| **🕵️‍♂️ Master Orchestrator** | Director | Parses natural language inputs into structured constraints. | `0.3` (Strict) |
+| **🎨 Vibe Curator (Research)** | Explorer | Recommends sights, restaurants, and hotels matching user vibes. | `0.7` (Creative) |
+| **🗺️ Route Master (Logistics)** | Dispatcher | Arranges activities by neighborhood to minimize backtracking. | `0.3` (Strict) |
+| **📈 CFO (Budget)** | Accountant | Builds a category cost breakdown and flags budget overruns. | `0.3` (Strict) |
+| **⚖️ Quality Gatekeeper (Review)** | Auditor | Verifies itinerary details against all initial constraints. | `0.3` (Strict) |
 
-### 1. Master Orchestrator Agent (`app/agents/orchestrator.py`)
-* **Objective**: Translate natural language prompts into a structured schema of constraints.
-* **LLM Config**: Temperature `0.3` (minimizes creative drift to enforce strict extraction).
-* **Behavior**: Parses destination, cities, duration (days), total budget (USD), preferences (e.g., food, history), and avoidances (e.g., crowds, long walks). If parameters are missing, it applies sensible defaults (e.g., $2000 USD, 7 days, mid-range accommodation).
-
-### 2. Destination Research Agent (`app/agents/destination.py`)
-* **Objective**: Curate places, experiences, and accommodations that align with constraints.
-* **LLM Config**: Temperature `0.7` (higher creativity for diverse recommendations).
-* **Behavior**: Recommends locations, neighborhoods, entry fees, and average durations. It filters out crowded sights if the user specified an avoidance of crowds (e.g., recommending Nezu Shrine instead of Meiji Jingu in Tokyo).
-
-### 3. Logistics Coordinator Agent (`app/agents/logistics.py`)
-* **Objective**: Sequence activities day-by-day to form a logical timeline.
-* **LLM Config**: Temperature `0.3`.
-* **Behavior**: Organizes activities into `Morning`, `Afternoon`, and `Evening` slots. It groups activities by neighborhood to minimize transit times and avoid geographic backtracking.
-
-### 4. Budget Agent (`app/agents/budget.py`)
-* **Objective**: Construct a financial model of the trip.
-* **LLM Config**: Temperature `0.3`.
-* **Behavior**: Evaluates costs across six categories (`flights`, `accommodation`, `transit`, `food`, `activities`, and `buffer`). It calculates estimated costs, compares them against target category limits, and flags category overruns with an `Exceeded` status.
-
-### 5. Review Agent (`app/agents/review.py`)
-* **Objective**: Serve as the quality gate (Verification Phase).
-* **LLM Config**: Temperature `0.3`.
-* **Behavior**: Evaluates the plan against six criteria: `duration_fit`, `city_coverage`, `budget_compliance`, `preference_alignment`, `avoidance_compliance`, and `logistics_realism`. If any check fails, it outputs `status="FAIL"` along with detailed feedback logs.
-
-### 🔁 Self-Correction & Feedback Loop
-If the **Review Agent** fails a plan, the pipeline triggers a retry loop (capped at **2 retries**). The failure log is fed back to the **Destination Research** and **Logistics** agents as a system message. The agents adapt their output based on the failure logs. If the checks still fail after 2 retries, a fallback check returns the best-effort plan with `validation_passed=False` and a list of warnings.
+### 🔄 The Self-Correction Feedback Loop
+If the **Quality Gatekeeper** flags a constraint violation (e.g. daily budget exceeded or too many active hours), it outputs a failure report. The pipeline routes this feedback back to the **Curator** and **Route Master** agents to adjust their planning, running up to **2 automated retries** before delivering the final, audited itinerary.
 
 ---
 
-## 📋 API Specifications
+## 💻 Tech Stack & Design Architecture
 
-Traveller enforces strict Pydantic models for request/response serialization. 
+Traveller combines modern engineering paradigms with premium design systems:
 
-### 1. Extract Constraints
-* **Endpoint**: `POST /api/extract`
-* **Request Payload**:
-  ```json
-  { "prompt": "Plan a 3-day trip to Japan. Tokyo only. Budget $1500. Love ramen, hate long walks." }
-  ```
-* **Response Payload (`TravelConstraints`)**:
-  ```json
-  {
-    "destination": "Japan",
-    "cities": ["Tokyo"],
-    "duration_days": 3,
-    "budget_usd": 1500.0,
-    "preferences": ["Ramen", "Food"],
-    "avoidances": ["Long walks"],
-    "travel_style": "independent",
-    "accommodation_preference": "mid-range"
-  }
-  ```
+### 🎨 Frontend (Client Shell)
+* **Obsidian Void Theme**: A sleek `#0B0F19` slate-glass backdrop with vibrant Aurora Teal (`#0D9488`) highlights.
+* **Leaflet.js**: Vector maps utilizing CartoDB Dark Matter tiles.
+* **Dynamic Budget Gauges**: Inline SVG rings that calculate spent vs. remaining budgets on the fly.
+* **Visual Diff Engine**: Red/green diff boxes highlighting co-pilot adjustments.
+* **Co-op Presence Simulation**: Live cursors showing mock collaborative users (Priya & Sam).
 
-### 2. Generate Plan
-* **Endpoint**: `POST /api/plan`
-* **Request Payload**: Contains either `prompt` (E2E run) or a structured `constraints` object (running from the constraint editor).
-* **Response Payload (`ItineraryPlan`)**:
-  ```json
-  {
-    "destination": "Japan",
-    "duration_days": 3,
-    "days": [
-      {
-        "day_number": 1,
-        "title": "Ramen Discovery & Historic Walk",
-        "activities": [
-          {
-            "name": "Nezu Shrine",
-            "type": "temple",
-            "time_slot": "Morning",
-            "cost_usd": 0.0,
-            "duration_hours": 1.5,
-            "crowd_level": "low",
-            "description": "Quiet shrine, avoiding Meiji Jingu crowds."
-          }
-        ],
-        "transit_info": "Metro (15 mins, $2)"
-      }
-    ],
-    "budget_summary": [
-      {
-        "category": "accommodation",
-        "allocated_usd": 500.0,
-        "estimated_cost_usd": 450.0,
-        "status": "Within"
-      }
-    ],
-    "validation_passed": true,
-    "validation_notes": "Successfully validated by Review Agent."
-  }
-  ```
-
-### 3. Refine Plan
-* **Endpoint**: `POST /api/refine`
-* **Request Payload**: Receives the `existing_plan` and the user's conversational `instructions`.
-* **Response Payload**: An updated `ItineraryPlan` with recalculated budget and validation states.
+### ⚙️ Backend (API Engine)
+* **FastAPI**: Asynchronous Python web framework for clean API routes.
+* **Pydantic v2**: Hard schema validation for data models.
+* **Google GenAI SDK**: Direct integration with Gemini 2.5 Flash Lite.
+* **Pytest**: Complete unit testing suite with offline mocks.
 
 ---
 
-## 🛠️ Local Development & Installation
+## ⚙️ Quick Start (Run Locally)
 
-### Setup Environment
-1. Ensure **Python 3.10+** is installed on your local machine.
-2. Clone the repository and navigate into the root directory:
-   ```bash
-   git clone https://github.com/Navi-0212/Traveller.git
-   cd Traveller
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Create a `.env` file in the project root:
-   ```env
-   GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
-   ALLOWED_ORIGINS=*
-   ```
-   *(Get your API key from [Google AI Studio](https://aistudio.google.com/))*
+### 1. Prerequisites
+Ensure you have **Python 3.10+** installed.
 
-### Run the Dev Server
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure API Key
+Create a `.env` file in the project root:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+*(Supports new Gemini AI Studio secure keys starting with `AQ.`)*
+
+### 4. Start the Application
 ```bash
 python run.py
 ```
-The server will start on `http://127.0.0.1:8000`. You can visit this URL in your browser to interact with the frontend, or visit `http://127.0.0.1:8000/docs` to view the interactive Swagger API documentation.
+Visit **`http://localhost:8000`** in your browser.
 
 ---
 
-## 🧪 Verification & Test Suite
+## 🧪 Testing
 
-Traveller includes a test suite covering unit operations and integration flows under `app/tests/`. 
-
-To accommodate developer key limits (Free Tier API quotas), the test suite segregates **offline mock tests** from **live integration tests**.
+Test the API and pipeline using the automated test suite:
 
 ```bash
-# Run only mock-based offline tests (zero API calls, runs instantly)
+# Run mock-based offline tests (instant, requires no API key)
 python -m pytest -k "mocked"
 
-# Run the complete test suite (Requires a valid GEMINI_API_KEY env variable)
+# Run full integration tests (requires valid GEMINI_API_KEY)
 python -m pytest
 ```
 
 ---
 
-## 🌐 Production Deployment Engineering
+## 🌐 Production Deployment
 
-Traveller is configured for rapid, seamless deployment using a decoupled structure.
-
-### Backend Hosting (Railway)
-* **Start Command**: Railway detects the root `Procfile` and runs `web: python run.py`.
-* **Port Mapping**: The backend automatically binds to `0.0.0.0` and listens to the port injected dynamically by Railway via `os.environ.get("PORT")`.
-* **CORS Security**: You can lock down API access by passing a comma-separated list of your Vercel domains into the `ALLOWED_ORIGINS` environment variable in Railway.
-
-### Frontend Hosting (Vercel)
-* **Asset Routing**: Vercel reads `vercel.json` to route root `/` traffic directly to serve the static dashboard at `static/index.html`.
-* **API Rewrite Proxy**: `vercel.json` maps `/api/:path*` to your Railway URL. This routes API requests on Vercel through a server-side proxy, bypassing CORS pre-flight steps and protecting client-side requests from cross-origin blocking.
+Refer to [deployment.md](deployment.md) for full instructions on hosting the static frontend on **Vercel** and the backend API on **Railway** using reverse proxies.
