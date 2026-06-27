@@ -6,6 +6,8 @@ from google import genai
 from google.genai import types
 from app.models import TravelConstraints, LogisticsOutput, BudgetOutput
 
+from app.utils import call_gemini_with_retry
+
 load_dotenv()
 
 class BudgetAgent:
@@ -52,7 +54,8 @@ class BudgetAgent:
         )
 
         try:
-            response = self.client.models.generate_content(
+            response = call_gemini_with_retry(
+                client=self.client,
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(

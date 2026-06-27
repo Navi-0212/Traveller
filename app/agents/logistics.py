@@ -6,6 +6,8 @@ from google import genai
 from google.genai import types
 from app.models import TravelConstraints, DestinationCuration, LogisticsOutput
 
+from app.utils import call_gemini_with_retry
+
 load_dotenv()
 
 class LogisticsAgent:
@@ -55,7 +57,8 @@ class LogisticsAgent:
             prompt += f"\n\nCRITICAL FEEDBACK FROM PREVIOUS RUN:\n{feedback}\nPlease adjust the sequencing and day assignments specifically to fix these validation errors."
 
         try:
-            response = self.client.models.generate_content(
+            response = call_gemini_with_retry(
+                client=self.client,
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
