@@ -119,8 +119,3 @@ python -m pytest -k "mocked"
 python -m pytest
 ```
 
----
-
-## 🌐 Production Deployment
-
-Refer to [deployment.md](deployment.md) for full instructions on hosting the static frontend on **Vercel** and the backend API on **Railway** using reverse proxies.
