@@ -672,10 +672,8 @@
             generatedItinerary: null
         };
 
-        // API Base URL config: empty for local FastAPI serving, Railway URL for production Vercel
-        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '::1')
-            ? ''
-            : 'https://traveller-backend-production.up.railway.app'; // Update this with your Railway backend URL
+        // API Base URL config: empty to route via relative path (uses local dev server or Vercel proxy)
+        const API_BASE_URL = '';
 
         // Screen DOM elements
         const screenLanding = document.getElementById("screen-landing");
