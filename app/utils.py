@@ -1,7 +1,7 @@
 import time
 import random
 
-def call_gemini_with_retry(client, model: str, contents, config, max_retries: int = 3, initial_delay: float = 2.0):
+def call_gemini_with_retry(client, model: str, contents, config, max_retries: int = 4, initial_delay: float = 4.0):
     """
     Executes a Gemini API call with exponential backoff and jitter when encountering 
     rate limits (429) or transient server overloads (503).
