@@ -48,6 +48,9 @@ async def extract_constraints(request: PlanRequest):
         constraints = pipeline.orchestrator.extract_constraints(request.prompt)
         return constraints
     except Exception as e:
+        import traceback
+        print("ERROR in /api/extract:")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Constraint extraction error: {str(e)}")
 
 @app.post("/api/plan", response_model=ItineraryPlan)
@@ -58,6 +61,9 @@ async def generate_travel_plan(request: PlanRequest):
         plan = pipeline.generate_plan(user_prompt=request.prompt, constraints=request.constraints)
         return plan
     except Exception as e:
+        import traceback
+        print("ERROR in /api/plan:")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Generation pipeline error: {str(e)}")
 
 @app.post("/api/refine", response_model=ItineraryPlan)
@@ -68,6 +74,9 @@ async def refine_travel_plan(request: RefineRequest):
         updated_plan = pipeline.refine_plan(request.existing_plan, request.instructions)
         return updated_plan
     except Exception as e:
+        import traceback
+        print("ERROR in /api/refine:")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Refinement pipeline error: {str(e)}")
 
 # Serve index.html at root if present (for local development), otherwise redirect to health check
